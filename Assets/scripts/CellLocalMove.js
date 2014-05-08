@@ -58,7 +58,7 @@ function Update () {
 		if(Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.D)){
 			rotAngle = 0;
 		}
-		transform.RotateAround(transform.parent.position,Vector3(0,1,0),rotAngle);
+		transform.Rotate(Vector3.forward*rotAngle);
 	}
 	
 	if(movemode == MoveMode.Drift){
