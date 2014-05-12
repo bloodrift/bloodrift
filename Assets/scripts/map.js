@@ -193,4 +193,14 @@ public class Vessel{
 		}
 		return dir;
 	}
+	
+	public function GetRadius(centPos: float) : float{
+		var k : float = centPos / vessLength;
+		if(vessType % 2 == 0){
+			return (1 - k) * radius + k * endRadius;
+		}
+		else{
+			return radius;
+		}
+	}
 };
