@@ -4,54 +4,67 @@
 
 var TU_0 : GameObject;
 var TU_1 : GameObject;
-static var vesselMap = new Map();
+var CELL : GameObject;
+var CAM : GameObject;
 
-var cam : GameObject;
-var curVess = 0;
-var curPos : float = 0;
-var curSpeed : float = 10;
+
+static var vesselMap = new Map();
 
 function Start(){
 	// initialize models in real scene
 	var vess : Vessel;
-	var instance : GameObject;
 	for (var i = 0; i < vesselMap.map.length; ++i){
 		vess = vesselMap.map[i];
 		switch (vess.vessType){
 			case 0:
-				instance = Instantiate(TU_0, vess.startPoint, vess.quaRotation);
+				vess.instance = Instantiate(TU_0, vess.startPoint, vess.quaRotation);
 				break;
 			case 1:
-				instance = Instantiate(TU_1, vess.startPoint, vess.quaRotation);
+				vess.instance = Instantiate(TU_1, vess.startPoint, vess.quaRotation);
 				break;
 		}
 	}
-	cam.transform.position = Vector3.zero;
-	cam.transform.rotation = Quaternion.AngleAxis(-90, Vector3(1, 0, 0));
+	var cell : Cell = vesselMap.player;
+	vesselMap.player.instance = Instantiate(CELL, cell.position, cell.rotation);
+	var cam : Cell = vesselMap.cam;
+	cam.instance = Instantiate(CAM, cam.position, cam.rotation);
 }
 
+static var rotateSpeed : float;
+static var moveSpeed : float;
 
 function Update(){
-	var vess : Vessel = vesselMap.map[curVess];
-	curPos = vess.NextCentPos(curPos, curSpeed, Time.deltaTime);
-//	Debug.Log(curPos);
-	if (curPos > vess.vessLength){
-		curPos -= vess.vessLength;
-		curVess += 1;
-		if(curVess >= vesselMap.map.length){
-			curVess = 0;
-		}
-		vess = vesselMap.map[curVess];
+	if(Input.GetKeyDown(KeyCode.A)){
+		rotateSpeed = -100;
 	}
-	transform.position = vess.CentPos2RealPos(curPos);
-	var lookat = vess.CentPos2ForwardDir(curPos);
-	transform.LookAt(transform.position + lookat, vess.GetUpDir(curPos, 0));
+	if(Input.GetKeyDown(KeyCode.D)){
+		rotateSpeed = 100;
+	}
+	if(Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A)){
+		rotateSpeed = 0;
+	}
+	if(Input.GetKeyDown(KeyCode.W)){
+		moveSpeed = 1;
+	}
+	if(Input.GetKeyUp(KeyCode.W)){
+		moveSpeed = 0;
+	}
+	vesselMap.Rotate(vesselMap.player, rotateSpeed * Time.deltaTime);
+	vesselMap.SetSpeed(vesselMap.player, moveSpeed);
+	vesselMap.Move(vesselMap.player, Time.deltaTime);
+	
+	vesselMap.Rotate(vesselMap.cam, rotateSpeed * Time.deltaTime);
+	vesselMap.SetSpeed(vesselMap.cam, moveSpeed);
+	vesselMap.Move(vesselMap.cam, Time.deltaTime);
+	
 }
 
 public class Map{
-	public var map : Array; 
+	static public var map : Array; 
 	public var lastPoint : Vector3;
 	public var lastRotation : Quaternion;
+	public var player : Cell;	
+	public var cam : Cell;
 	
 	public function Map(){
 		map = new Array();
@@ -75,7 +88,42 @@ public class Map{
 		AddVessel(0);
 		AddVessel(1);
 		AddVessel(1);
-		AddVessel(0);
+		AddVessel(0);		
+		
+		player = new Cell(0, 0.15, 0, 0, map);
+		//cam = new Cell(13, 0, 1, 17, map);
+		cam = new Cell(13, 0, 1, 17, map);
+	}
+	
+	public function Move(cell : Cell, time : float){
+		var vess : Vessel = map[cell.curVess];
+		//beneth is a unclear model, we can modify it later
+		var rots = cell.rotateAngle * Mathf.PI / 180.0;
+		var speedModifier : float = 1;
+		if(vess.vessType%2 != 0){
+			speedModifier = 1.0 / (1 - Mathf.Cos(rots) * vess.radius/vess.rotateRadius);
+		}
+		cell.centPos = vess.NextCentPos(cell.centPos, cell.speed * speedModifier, time);
+		// go to the next vessel
+		if (cell.centPos > vess.vessLength){
+			cell.centPos -= vess.vessLength;
+			cell.curVess += 1;
+			// at the end
+			if(cell.curVess >= map.length){
+				cell.curVess = 0;
+			}
+			vess = map[cell.curVess];
+		}
+		cell.UpdatePos(vess);	
+	}
+	
+	public function SetSpeed(cell : Cell, sp : float){
+		cell.speed = sp;
+	}
+	
+	public function Rotate(cell : Cell, ra : float){
+		cell.Rotate(ra);
+		cell.UpdatePos(map[cell.curVess]);
 	}
 	
 	public function AddVessel(type: int){
@@ -96,8 +144,71 @@ public class Map{
 		lastPoint = vess.endPoint;
 		lastRotation = vess.endRotation;
 	}
-	
 }
+	
+//------------------------
+// 1 for Float Mode
+// 0 for Ground Mode
+public class Cell{
+	public var cellType : int;
+	
+	public var position : Vector3;
+	public var rotation : Quaternion;
+	public var radius : float;
+	public var instance : GameObject;
+	
+	public var mode : int;
+	public var centPos : float;
+	public var curVess : int;
+	public var speed : float;
+	public var rotateAngle : float;
+
+	public function Cell(type : int, rd : float, startMode : int, cv : int, map : Array){
+		cellType = type;
+		radius = rd;
+		mode = startMode;
+		curVess = cv;
+		var vess : Vessel = map[curVess];
+		var lookat = vess.CentPos2ForwardDir(centPos);
+		var up = vess.GetUpDir(centPos, rotateAngle);
+		var rad = vess.GetRadius(centPos);
+		rotation = Quaternion.LookRotation(lookat, up);
+		position = vess.CentPos2RealPos(centPos);
+		if(mode == 0){
+			position -= (rad - radius) * up;
+			Debug.Log(up);
+		}
+	}
+	
+	public function Rotate(angle : float){
+		rotateAngle = rotateAngle + angle;
+		while(rotateAngle > 360){
+			rotateAngle -= 360;
+		}
+		while(rotateAngle < 0){
+			rotateAngle += 360;
+		}
+	}
+	
+	public function UpdatePos(vess : Vessel){
+		var lookat = vess.CentPos2ForwardDir(centPos);
+		var up = vess.GetUpDir(centPos, rotateAngle);
+		var rad = vess.GetRadius(centPos);
+		rotation = Quaternion.LookRotation(lookat, up);
+		position = vess.CentPos2RealPos(centPos);
+		if(mode == 0){
+			position -= (rad - radius) * up;
+		}
+		instance.transform.position = position;
+		instance.transform.rotation = rotation;
+	}
+	
+	public function SwitchMode(){
+		mode = 1 - mode;
+	}
+}
+
+//---------------------------------------------------------------------------------------------------------
 
 public class Vessel{
 	public var vessType : int;  // 0 for straight tube , 1 for bend tube
@@ -105,6 +216,8 @@ public class Vessel{
 	public var modRotation : float;
 	public var quaRotation : Quaternion;
 	public var radius : float;
+	
+	public var instance : GameObject;
 	
 	
 	// these are properties of straight tube
@@ -123,7 +236,7 @@ public class Vessel{
 		vessType = type;
 		startPoint = sp;
 		modRotation = mr;
-		quaRotation = qr;
+		quaRotation = qr * Quaternion.AngleAxis(modRotation, Vector3.up);
 		radius = r;
 	}
 	
@@ -141,12 +254,8 @@ public class Vessel{
 			var rots = rotateAngle * Mathf.PI / 180.0;
 			vessLength = rots * rotateRadius;
 			endPoint = startPoint + Vector3(0, rotateRadius * Mathf.Sin(rots), rotateRadius * (1 - Mathf.Cos(rots)));			
-			var q : Quaternion;
-			var p : Quaternion;
-			q = Quaternion.AngleAxis(modRotation, Vector3.up);
-			p = Quaternion.AngleAxis(rotateAngle, Vector3(1, 0, 0));
-			endPoint = quaRotation * q * (endPoint - startPoint) + startPoint;
-			endRotation = p * q * quaRotation;
+			endPoint = quaRotation * (endPoint - startPoint) + startPoint;
+			endRotation = Quaternion.AngleAxis(rotateAngle, Vector3(1, 0, 0)) * quaRotation;
 		}
 	}
 	
@@ -161,9 +270,8 @@ public class Vessel{
 		}
 		else{
 			var rots  = centPos / rotateRadius;
-			Debug.Log(rots);
 			pos = startPoint + Vector3(0, rotateRadius * Mathf.Sin(rots), rotateRadius * (1 - Mathf.Cos(rots)));		
-			pos = quaRotation * Quaternion.AngleAxis(modRotation, Vector3.up) * (pos - startPoint) + startPoint;
+			pos = quaRotation * (pos - startPoint) + startPoint;
 		}
 		return pos;
 	}
@@ -175,23 +283,23 @@ public class Vessel{
 		}
 		else{
 			var angle = centPos / rotateRadius * 180 / Mathf.PI;
-			var q = Quaternion.AngleAxis(modRotation, Vector3.up) * Quaternion.AngleAxis(angle, Vector3(1, 0, 0));
+			var q = Quaternion.AngleAxis(angle, Vector3(1, 0, 0));
 			dir = (quaRotation * q * Vector3.up).normalized;
 		}
 		return dir;
 	}
 	
 	public function GetUpDir(centPos : float, rotAngle : float) : Vector3{
-		var dir : Vector3 = Vector3(1, 0, 0);
+	//	rotAngle = 45;
+		var dir : Vector3 = Vector3(0, 0, -1);
 		if(vessType % 2 == 0){
-			dir = (quaRotation * Quaternion.AngleAxis(rotAngle, Vector3.up) * dir).normalized;
+			dir = quaRotation * Quaternion.AngleAxis(rotAngle, Vector3.up) * dir;
 		}
 		else{
 			var angle = centPos / rotateRadius * 180 / Mathf.PI;
-			var q = Quaternion.AngleAxis(modRotation, Vector3.up) * Quaternion.AngleAxis(angle, Vector3(1, 0, 0));
-			dir = (quaRotation * Quaternion.AngleAxis(rotAngle, Vector3.up) * q * dir).normalized;
+			dir = quaRotation * Quaternion.AngleAxis(angle, Vector3(1, 0 ,0)) * Quaternion.AngleAxis(rotAngle, Vector3(0, 1 ,0)) * dir;
 		}
-		return dir;
+		return dir.normalized;
 	}
 	
 	public function GetRadius(centPos: float) : float{
@@ -203,4 +311,4 @@ public class Vessel{
 			return radius;
 		}
 	}
-};
+}
