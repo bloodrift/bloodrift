@@ -44,7 +44,7 @@ function Update(){
 		rotateSpeed = 0;
 	}
 	if(Input.GetKeyDown(KeyCode.W)){
-		moveSpeed = 1;
+		moveSpeed = 3;
 	}
 	if(Input.GetKeyUp(KeyCode.W)){
 		moveSpeed = 0;
@@ -53,9 +53,15 @@ function Update(){
 	vesselMap.SetSpeed(vesselMap.player, moveSpeed);
 	vesselMap.Move(vesselMap.player, Time.deltaTime);
 	
+	vesselMap.cam.instance.transform.position = vesselMap.player.camPos;
+	vesselMap.cam.instance.transform.rotation = vesselMap.player.camRot;
+	
+	Debug.Log(vesselMap.player.distance);
+/*	
 	vesselMap.Rotate(vesselMap.cam, rotateSpeed * Time.deltaTime);
 	vesselMap.SetSpeed(vesselMap.cam, moveSpeed);
 	vesselMap.Move(vesselMap.cam, Time.deltaTime);
+	*/
 	
 }
 
@@ -103,7 +109,9 @@ public class Map{
 		if(vess.vessType%2 != 0){
 			speedModifier = 1.0 / (1 - Mathf.Cos(rots) * vess.radius/vess.rotateRadius);
 		}
-		cell.centPos = vess.NextCentPos(cell.centPos, cell.speed * speedModifier, time);
+		var nextPos = vess.NextCentPos(cell.centPos, cell.speed * speedModifier, time);
+		cell.distance += nextPos - cell.centPos;
+		cell.centPos = nextPos;
 		// go to the next vessel
 		if (cell.centPos > vess.vessLength){
 			cell.centPos -= vess.vessLength;
@@ -115,6 +123,9 @@ public class Map{
 			vess = map[cell.curVess];
 		}
 		cell.UpdatePos(vess);	
+/*		if( cell == player){
+			cam.instance.transform.position = cell.position 
+		}*/
 	}
 	
 	public function SetSpeed(cell : Cell, sp : float){
@@ -162,12 +173,19 @@ public class Cell{
 	public var curVess : int;
 	public var speed : float;
 	public var rotateAngle : float;
+	
+	public var distance : float;
+	public var score : int;
+	
+	public var camPos : Vector3;
+	public var camRot : Quaternion;
 
 	public function Cell(type : int, rd : float, startMode : int, cv : int, map : Array){
 		cellType = type;
 		radius = rd;
 		mode = startMode;
 		curVess = cv;
+		distance = 0;
 		var vess : Vessel = map[curVess];
 		var lookat = vess.CentPos2ForwardDir(centPos);
 		var up = vess.GetUpDir(centPos, rotateAngle);
@@ -176,7 +194,6 @@ public class Cell{
 		position = vess.CentPos2RealPos(centPos);
 		if(mode == 0){
 			position -= (rad - radius) * up;
-			Debug.Log(up);
 		}
 	}
 	
@@ -196,11 +213,14 @@ public class Cell{
 		var rad = vess.GetRadius(centPos);
 		rotation = Quaternion.LookRotation(lookat, up);
 		position = vess.CentPos2RealPos(centPos);
+		// to modified by speed later
+		camPos = position - 2 * rad * lookat;
 		if(mode == 0){
 			position -= (rad - radius) * up;
 		}
 		instance.transform.position = position;
 		instance.transform.rotation = rotation;
+		camRot = Quaternion.LookRotation(position - camPos, up);
 	}
 	
 	public function SwitchMode(){
@@ -208,6 +228,17 @@ public class Cell{
 	}
 }
 
+//---------------------------------------------------------------------------------------------------------
+public class BloodItem{
+	public var itemType : int;
+	public var radius : float;
+	public var position : Vector3;
+	public var instance : GameObject;
+	
+	public function BloodItem(){
+		
+	}
+}
 //---------------------------------------------------------------------------------------------------------
 
 public class Vessel{
