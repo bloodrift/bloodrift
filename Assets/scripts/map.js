@@ -7,6 +7,8 @@ var TU_1 : GameObject;
 var CELL : GameObject;
 var CAM : GameObject;
 
+var GUI_ : GameObject;
+
 
 static var vesselMap = new Map();
 
@@ -31,7 +33,14 @@ function Start(){
 }
 
 static var rotateSpeed : float;
-static var moveSpeed : float;
+static var moveSpeed : float = 2;
+
+var MAX_MOVE_SPEED :float = 8 ;
+var MIN_MOVE_SPEED :float = 0 ;
+
+//var moveSpeed = 1; 		// m/s
+private var acceleration :float = 0.2 ; 	//m/s2
+private var brakeAcceleration :float = 0.5 ;
 
 function Update(){
 	if(Input.GetKeyDown(KeyCode.A)){
@@ -43,12 +52,34 @@ function Update(){
 	if(Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A)){
 		rotateSpeed = 0;
 	}
-	if(Input.GetKeyDown(KeyCode.W)){
-		moveSpeed = 3;
-	}
-	if(Input.GetKeyUp(KeyCode.W)){
-		moveSpeed = 0;
-	}
+//	if(Input.GetKeyDown(KeyCode.W)){
+//		moveSpeed = 3;
+//	}
+//	if(Input.GetKeyUp(KeyCode.W)){
+//		moveSpeed = 0;
+//	}
+//	var post_moveSpeed : float;
+//	if(Input.GetKey(KeyCode.W)){
+//		post_moveSpeed = moveSpeed + acceleration;
+//		if( post_moveSpeed <= MAX_MOVE_SPEED ){
+//			moveSpeed = post_moveSpeed;
+//		}
+//		else{
+//			moveSpeed = MAX_MOVE_SPEED;
+//		}
+//	}
+//	if(Input.GetKey(KeyCode.S)){
+//		post_moveSpeed = moveSpeed - brakeAcceleration;	
+//		if( post_moveSpeed >= MIN_MOVE_SPEED ){
+//			moveSpeed = post_moveSpeed;
+//		}
+//		else{
+//			moveSpeed = MIN_MOVE_SPEED;
+//		}
+//	}
+	
+	//Debug.Log(moveSpeed);
+
 	vesselMap.Rotate(vesselMap.player, rotateSpeed * Time.deltaTime);
 	vesselMap.SetSpeed(vesselMap.player, moveSpeed);
 	vesselMap.Move(vesselMap.player, Time.deltaTime);
@@ -56,7 +87,11 @@ function Update(){
 	vesselMap.cam.instance.transform.position = vesselMap.player.camPos;
 	vesselMap.cam.instance.transform.rotation = vesselMap.player.camRot;
 	
-	Debug.Log(vesselMap.player.distance);
+	//Debug.Log(vesselMap.player.distance);
+	GUI_.SendMessage("increaseDistance",vesselMap.player.distance);
+	moveSpeed = Mathf.Log(vesselMap.player.distance+8);
+	
+	
 /*	
 	vesselMap.Rotate(vesselMap.cam, rotateSpeed * Time.deltaTime);
 	vesselMap.SetSpeed(vesselMap.cam, moveSpeed);

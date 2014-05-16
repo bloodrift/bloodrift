@@ -6,11 +6,11 @@ var distance_text : GameObject;
 var a = new Array();
 function Start () {
 	a.push(1);
-	Debug.Log(a);
+	//Debug.Log(a);
 }
 
 private var cur_score 	 : int = 0;
-private var cur_distance : int = 0;
+private var cur_distance : float = 0;
 
 function increaseScore( delta : int ){
 	cur_score += delta;
@@ -20,8 +20,8 @@ function decreaseScore( delta : int  ){
 	cur_score -= delta;
 }
 
-function increaseDistance( delta : int ){
-	cur_distance += delta;
+function increaseDistance( delta : float ){
+	cur_distance = delta;
 }
 
 function Update () {
@@ -30,6 +30,6 @@ function Update () {
 		// todo:
 	}
 	score_text.GetComponent(UILabel).text = ""+ cur_score ;
-	distance_text.GetComponent(UILabel).text = "" + cur_distance;
+	distance_text.GetComponent(UILabel).text = "" + Mathf.FloorToInt(cur_distance);
 	
 }
