@@ -9,6 +9,7 @@ var CAM : GameObject;
 
 var GUI_ : GameObject;
 
+var Spark : GameObject;
 
 static var vesselMap = new Map();
 
@@ -30,6 +31,7 @@ function Start(){
 	vesselMap.player.instance = Instantiate(CELL, cell.position, cell.rotation);
 	var cam : Cell = vesselMap.cam;
 	cam.instance = Instantiate(CAM, cam.position, cam.rotation);
+	
 }
 
 static var rotateSpeed : float;
@@ -91,7 +93,8 @@ function Update(){
 	GUI_.SendMessage("increaseDistance",vesselMap.player.distance);
 	moveSpeed = Mathf.Log(vesselMap.player.distance+8);
 	
-	
+	Spark.transform.position = vesselMap.player.camPos + vesselMap.player.camRot * Vector3(0,0,5);
+	Spark.transform.rotation = Quaternion.LookRotation(vesselMap.player.camPos - Spark.transform.position);	
 /*	
 	vesselMap.Rotate(vesselMap.cam, rotateSpeed * Time.deltaTime);
 	vesselMap.SetSpeed(vesselMap.cam, moveSpeed);
@@ -255,7 +258,8 @@ public class Cell{
 		}
 		instance.transform.position = position;
 		instance.transform.rotation = rotation;
-		camRot = Quaternion.LookRotation(position - camPos, up);
+		//camRot = Quaternion.LookRotation(position - camPos, up);
+		camRot = Quaternion.LookRotation(lookat, up);
 	}
 	
 	public function SwitchMode(){
