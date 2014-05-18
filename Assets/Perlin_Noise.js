@@ -50,5 +50,7 @@ function Update () {
 	if(test){
 		StopAllCoroutines();
 		StartCoroutine("doShake");
+	test = false;
+		
 	}
 }

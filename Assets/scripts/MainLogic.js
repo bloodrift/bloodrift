@@ -4,6 +4,7 @@
 
 var TU_0 : GameObject;
 var TU_1 : GameObject;
+
 var CELL : GameObject;
 var CAM : GameObject;
 var ADDONE : GameObject;
@@ -49,7 +50,9 @@ function InstantiateVessel(vess : Vessel){
 }
 
 static var rotateSpeed : float;
-static var moveSpeed : float = 2;
+static var moveSpeed : float;
+static var lrSpeed : float = 0;
+static var udSpeed : float = 0;
 
 var MAX_MOVE_SPEED :float = 8 ;
 var MIN_MOVE_SPEED :float = 0 ;
@@ -63,47 +66,45 @@ function Update(){
 		InstantiateVessel(vesselMap.map[vesselMap.map.length - vesselMap.newVessel]);
 		vesselMap.newVessel -= 1;
 	}
-
-	if(Input.GetKeyDown(KeyCode.A)){
-		rotateSpeed = -100;
+	if(vesselMap.player.mode == 0){
+		if(Input.GetKeyDown(KeyCode.A)){
+			rotateSpeed = -100;
+		}
+		if(Input.GetKeyDown(KeyCode.D)){
+			rotateSpeed = 100;
+		}
+		if(Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A)){
+			rotateSpeed = 0;
+		}
+		if(!vesselMap.player.onSwitch)
+			vesselMap.Rotate(vesselMap.player, rotateSpeed * Time.deltaTime);
 	}
-	if(Input.GetKeyDown(KeyCode.D)){
-		rotateSpeed = 100;
+	else {
+		if(Input.GetKeyDown(KeyCode.A)){
+			lrSpeed = -1;
+		}
+		if(Input.GetKeyDown(KeyCode.D)){
+			lrSpeed = 1;
+		}
+		if(Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A)){
+			lrSpeed = 0;
+		}
+		if(Input.GetKeyDown(KeyCode.W)){
+			udSpeed = 1;
+		}
+		if(Input.GetKeyDown(KeyCode.S)){
+			udSpeed = -1;
+		}
+		if(Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.S)){
+			udSpeed = 0;
+		}
+		if(!vesselMap.player.onSwitch)
+			vesselMap.player.Shift(Vector3(lrSpeed, udSpeed, 0) * Time.deltaTime);
 	}
-	if(Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A)){
-		rotateSpeed = 0;
+	if(Input.GetKeyDown(KeyCode.Space)){
+		vesselMap.player.SwitchMode();
 	}
 
-//	if(Input.GetKeyDown(KeyCode.W)){
-//		moveSpeed = 3;
-//	}
-//	if(Input.GetKeyUp(KeyCode.W)){
-//		moveSpeed = 0;
-//	}
-//	var post_moveSpeed : float;
-//	if(Input.GetKey(KeyCode.W)){
-//		post_moveSpeed = moveSpeed + acceleration;
-//		if( post_moveSpeed <= MAX_MOVE_SPEED ){
-//			moveSpeed = post_moveSpeed;
-//		}
-//		else{
-//			moveSpeed = MAX_MOVE_SPEED;
-//		}
-//	}
-//	if(Input.GetKey(KeyCode.S)){
-//		post_moveSpeed = moveSpeed - brakeAcceleration;	
-//		if( post_moveSpeed >= MIN_MOVE_SPEED ){
-//			moveSpeed = post_moveSpeed;
-//		}
-//		else{
-//			moveSpeed = MIN_MOVE_SPEED;
-//		}
-//	}
-	
-	//Debug.Log(moveSpeed);
-
-
-	vesselMap.Rotate(vesselMap.player, rotateSpeed * Time.deltaTime);
 	vesselMap.SetSpeed(vesselMap.player, moveSpeed);
 	vesselMap.Move(vesselMap.player, Time.deltaTime);
 	vesselMap.ItemHit(vesselMap.player);
@@ -160,9 +161,9 @@ public class Map{
 		AddVessel(1);
 		AddVessel(0);		
 		
-		player = new Cell(0, 0.15, 0, 0, map);
+		player = new Cell(0, 0.15, 0, 0, map, 0);
 		//cam = new Cell(13, 0, 1, 17, map);
-		cam = new Cell(13, 0, 1, 17, map);
+		cam = new Cell(13, 0, 1, 17, map, 0);
 	}
 	
 	public function Map(gameMode : int){
@@ -176,8 +177,8 @@ public class Map{
 				AddVessel(0);	
 			}
 		}
-		player = new Cell(0, 0.15, 0, 1, map);
-		cam = new Cell(13, 0, 1, 0, map);
+		player = new Cell(0, 0.15, 0, 1, map, 0);
+		cam = new Cell(13, 0, 1, 0, map, 0);
 	}
 	
 	public function Move(cell : Cell, time : float){
@@ -185,10 +186,10 @@ public class Map{
 
 		var vess : Vessel = map[cell.curVess - vesselOff];
 		//beneth is a unclear model, we can modify it later
-		var rots = cell.rotateAngle * Mathf.PI / 180.0;
+		var rots = cell.RealRotate() * Mathf.PI / 180.0;
 		var speedModifier : float = 1;
 		if(vess.vessType%2 != 0){
-			speedModifier = 1.0 / (1 - Mathf.Cos(rots) * vess.radius/vess.rotateRadius);
+			speedModifier = 1.0 / (1 - Mathf.Cos(rots) * cell.posOff.magnitude * vess.radius/vess.rotateRadius);
 		}
 		var nextPos = vess.NextCentPos(cell.centPos, cell.speed * speedModifier, time);
 		cell.distance += nextPos - cell.centPos;
@@ -198,10 +199,15 @@ public class Map{
 			if(mode == 2){
 				//destroy the vessels
 				var oldVess : Vessel = map[0];
+				var item : BloodItem;
+				for(var j = 0; j < oldVess.items.length; ++j){
+					item = oldVess.items[j];
+					GameObject.Destroy(item.instance, 0);
+				}
 				GameObject.Destroy(oldVess.instance, 0);
 				map.RemoveAt(0);
 				vesselOff += 1;
-				if (Random.value > 0.5){
+				if (Random.value > 0.7){
 					AddVessel(1);
 				}
 				else {
@@ -213,6 +219,11 @@ public class Map{
 			// at the end
 			vess = map[cell.curVess - vesselOff];
 		}
+		//------------switch mode-------------
+		if(cell.onSwitch){
+			cell.SmoothPosOff(time);
+		}
+		//-----------------------------------
 		cell.UpdatePos(vess);	
 /*		if( cell == player){
 			cam.instance.transform.position = cell.position 
@@ -242,10 +253,14 @@ public class Map{
 			default :
 				break;
 		}
+		for (var i = 0; i < 2; ++i){
+			vess.AddItemRandom(0);
+		}
 		map.Push(vess);
 		newVessel += 1;
 		lastPoint = vess.endPoint;
 		lastRotation = vess.endRotation;
+		
 	}
 	
 	public function ItemHit(cell : Cell){
@@ -260,6 +275,7 @@ public class Map{
 			}
 		}
 	}
+	
 }
 	
 //------------------------
@@ -279,27 +295,34 @@ public class Cell{
 	public var speed : float;
 	public var rotateAngle : float;
 	
+	//paras for drift mode
+	public var posOff : Vector3;
+	public var aimOff : Vector3;	
+	public var onSwitch : boolean;
+	
 	public var distance : float;
 	public var score : int;
 	
 	public var camPos : Vector3;
 	public var camRot : Quaternion;
 
-	public function Cell(type : int, rd : float, startMode : int, cv : int, map : Array){
+	public function Cell(type : int, rd : float, startMode : int, cv : int, map : Array, vesselOff : int){
 		cellType = type;
 		radius = rd;
 		mode = startMode;
 		curVess = cv;
 		distance = 0;
-		var vess : Vessel = map[curVess];
-		var lookat = vess.CentPos2ForwardDir(centPos);
+		var vess : Vessel = map[curVess - vesselOff];
+	/*	var lookat = vess.CentPos2ForwardDir(centPos);
 		var up = vess.GetUpDir(centPos, rotateAngle);
 		var rad = vess.GetRadius(centPos);
 		rotation = Quaternion.LookRotation(lookat, up);
-		position = vess.CentPos2RealPos(centPos);
+		position = vess.CentPos2RealPos(centPos);*/
 		if(mode == 0){
-			position -= (rad - radius) * up;
+			posOff = Vector3(0, -1, 0);
 		}
+		else posOff = Vector3(0, 0, 0);
+		UpdatePos(vess);
 	}
 	
 	public function Rotate(angle : float){
@@ -312,6 +335,19 @@ public class Cell{
 		}
 	}
 	
+	public function Shift(offSpeed : Vector3){
+		posOff += offSpeed;
+		if(posOff.sqrMagnitude > 1)
+			posOff.Normalize();
+	}
+	
+	public function RealRotate() : float{
+		var angle = Vector3.Angle(Vector3(0, -1, 0), posOff);
+		if( posOff.x < 0)
+			angle = -angle;
+		return rotateAngle + angle;
+	}
+	
 	public function UpdatePos(vess : Vessel){
 		var lookat = vess.CentPos2ForwardDir(centPos);
 		var up = vess.GetUpDir(centPos, rotateAngle);
@@ -320,16 +356,32 @@ public class Cell{
 		position = vess.CentPos2RealPos(centPos);
 		// to modified by speed later
 		camPos = position - 2 * rad * lookat;
-		if(mode == 0){
-			position -= (rad - radius) * up;
+		
+		position += (rad - radius) * (rotation * posOff);
+		
+		if(instance != null){
+			instance.transform.position = position;
+			instance.transform.rotation = rotation;
 		}
-		instance.transform.position = position;
-		instance.transform.rotation = rotation;
 		camRot = Quaternion.LookRotation(lookat, up);
 	}
 	
 	public function SwitchMode(){
-		mode = 1 - mode;
+		if(!onSwitch){
+			mode = 1 - mode;
+			onSwitch = true;
+			if(mode == 0)
+				aimOff = Vector3(0, -1, 0);
+			else aimOff = Vector3(0, 0, 0);
+		}
+	}
+	// speed = 1 / 0.5 = 2;
+	public function SmoothPosOff(time : float){
+		if((aimOff - posOff).sqrMagnitude < 0.01){
+			onSwitch = false;
+			return ;
+		}
+		posOff += (aimOff - posOff) * 4 * time;
 	}
 }
 
@@ -476,9 +528,12 @@ public class Vessel{
 	public function AddItemRandom(type : int){
 		var cp = Random.Range(0, vessLength);
 		var pos = CentPos2RealPos(cp);
+		var lookat = CentPos2ForwardDir(cp);
 		var up = GetUpDir(cp, Random.Range(0, 360));
 		var rad = GetRadius(cp);
-		pos -= (rad - 0.1) * up;
+		var off = Random.insideUnitCircle;
+		var posOff = Vector3(off.x, off.y, 0);
+		pos = pos + (rad - 0.1) * (Quaternion.LookRotation(lookat, up) * up);
 		var item = new BloodItem(type, 0.1, pos);
 		items.Add(item);
 	}
