@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: c3af9f5ec3300b44d889df9c2e669d55
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - fishEyeShader: {fileID: 4800000, guid: 874ceab4425f64bccb1d14032f4452b1, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 

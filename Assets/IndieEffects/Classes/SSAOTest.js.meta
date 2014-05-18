@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 8966722a6163a9145bb80bd6d5aa5f82
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - IndieEffects: {instanceID: 0}
+  - mainTex: {instanceID: 0}
+  - depthTex: {instanceID: 0}
+  - randTex: {fileID: 2800000, guid: a181ca8e3c62f3e4b8f183f6c586b032, type: 3}
+  - shaderAO: {fileID: 4800000, guid: 7297998d6efe345ddabd6694f139b095, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
