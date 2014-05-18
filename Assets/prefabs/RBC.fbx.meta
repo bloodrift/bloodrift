@@ -1,35 +1,13 @@
 fileFormatVersion: 2
-guid: 3460bcb22f59fbf4daa9b689d01b7377
+guid: 8ef169641477aaa4b9fea0f24248d07a
 ModelImporter:
   serializedVersion: 16
   fileIDToRecycleName:
-    100000: 2r
-    100002: 2to3
-    100004: 3r
-    100006: 3to2
-    100008: 4r
-    100010: //RootNode
-    400000: 2r
-    400002: 2to3
-    400004: 3r
-    400006: 3to2
-    400008: 4r
-    400010: //RootNode
-    2300000: 2r
-    2300002: 2to3
-    2300004: 3r
-    2300006: 3to2
-    2300008: 4r
-    3300000: 2r
-    3300002: 2to3
-    3300004: 3r
-    3300006: 3to2
-    3300008: 4r
-    4300000: 2to3
-    4300002: 2r
-    4300004: 4r
-    4300006: 3r
-    4300008: 3to2
+    100000: //RootNode
+    400000: //RootNode
+    2300000: //RootNode
+    3300000: //RootNode
+    4300000: Sphere
     7400000: Default Take
     9500000: //RootNode
   materials:
@@ -50,7 +28,7 @@ ModelImporter:
     isReadable: 1
   meshes:
     lODScreenPercentages: []
-    globalScale: .00999999978
+    globalScale: 1
     meshCompression: 0
     addColliders: 0
     importBlendShapes: 1
