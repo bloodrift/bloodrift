@@ -182,8 +182,6 @@ public class Map{
 	}
 	
 	public function Move(cell : Cell, time : float){
-		Debug.Log(cell.curVess - vesselOff);
-
 		var vess : Vessel = map[cell.curVess - vesselOff];
 		//beneth is a unclear model, we can modify it later
 		var rots = cell.RealRotate() * Mathf.PI / 180.0;
@@ -194,7 +192,8 @@ public class Map{
 		var nextPos = vess.NextCentPos(cell.centPos, cell.speed * speedModifier, time);
 		cell.distance += nextPos - cell.centPos;
 		cell.centPos = nextPos;
-		// go to the next vessel
+		// go to the next vessel--------------------------
+		
 		if (cell.centPos > vess.vessLength){
 			if(mode == 2){
 				//destroy the vessels
@@ -218,8 +217,9 @@ public class Map{
 			cell.curVess += 1;
 			// at the end
 			vess = map[cell.curVess - vesselOff];
+			cell.Rotate(-vess.modRotation);
 		}
-		//------------switch mode-------------
+		//------------switch mode-------------------------------------------
 		if(cell.onSwitch){
 			cell.SmoothPosOff(time);
 		}
@@ -247,7 +247,7 @@ public class Map{
 				vess.SetProperty(2, 1);
 				break;
 			case 1 :
-				vess = new Vessel(type, lastPoint, 0, lastRotation, 1);
+				vess = new Vessel(type, lastPoint, 45, lastRotation, 1);
 				vess.SetProperty(2, 60);
 				break;
 			default :
@@ -260,7 +260,6 @@ public class Map{
 		newVessel += 1;
 		lastPoint = vess.endPoint;
 		lastRotation = vess.endRotation;
-		
 	}
 	
 	public function ItemHit(cell : Cell){
@@ -313,11 +312,6 @@ public class Cell{
 		curVess = cv;
 		distance = 0;
 		var vess : Vessel = map[curVess - vesselOff];
-	/*	var lookat = vess.CentPos2ForwardDir(centPos);
-		var up = vess.GetUpDir(centPos, rotateAngle);
-		var rad = vess.GetRadius(centPos);
-		rotation = Quaternion.LookRotation(lookat, up);
-		position = vess.CentPos2RealPos(centPos);*/
 		if(mode == 0){
 			posOff = Vector3(0, -1, 0);
 		}
@@ -448,7 +442,7 @@ public class Vessel{
 		vessType = type;
 		startPoint = sp;
 		modRotation = mr;
-		quaRotation = qr * Quaternion.AngleAxis(modRotation, Vector3.up);
+		quaRotation =  qr * Quaternion.AngleAxis(modRotation, Vector3(0, 1, 0));
 		radius = r;
 		items = new Array();
 	}
@@ -468,7 +462,7 @@ public class Vessel{
 			vessLength = rots * rotateRadius;
 			endPoint = startPoint + Vector3(0, rotateRadius * Mathf.Sin(rots), rotateRadius * (1 - Mathf.Cos(rots)));			
 			endPoint = quaRotation * (endPoint - startPoint) + startPoint;
-			endRotation = Quaternion.AngleAxis(rotateAngle, Vector3(1, 0, 0)) * quaRotation;
+			endRotation = quaRotation  * Quaternion.AngleAxis(rotateAngle, Vector3(1, 0, 0));
 		}
 	}
 	
