@@ -6,7 +6,6 @@ var distance_text : GameObject;
 var a = new Array();
 function Start () {
 	a.push(1);
-	//Debug.Log(a);
 }
 
 private var cur_score 	 : int = 0;
