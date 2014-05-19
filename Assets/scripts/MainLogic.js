@@ -1,5 +1,7 @@
 ﻿#pragma strict
 
+
+
 //these are tubes and its prefabs
 
 var ST_1_1_2 : GameObject;
@@ -25,6 +27,21 @@ static var vesselMap = new Map(2);
 
 static function getCamPos(){
 	return vesselMap.player.camPos;
+}
+
+static function getScore(){
+	return vesselMap.player.score;
+}
+
+function gameOver(distance : float){
+	
+	// write player distance to file
+	
+	//var sw : StreamWriter = new StreamWriter("userinfo");
+	//sw.WriteLine(distance);
+	
+	Application.LoadLevel("gameover");
+
 }
 
 function Start(){
@@ -99,10 +116,10 @@ function Update(){
 	}
 	if(vesselMap.player.mode == 0){
 		if(Input.GetKeyDown(KeyCode.A)){
-			rotateSpeed = -100;
+			rotateSpeed = -300;
 		}
 		if(Input.GetKeyDown(KeyCode.D)){
-			rotateSpeed = 100;
+			rotateSpeed = 300;
 		}
 		if(Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A)){
 			rotateSpeed = 0;
@@ -112,19 +129,19 @@ function Update(){
 	}
 	else {
 		if(Input.GetKeyDown(KeyCode.A)){
-			lrSpeed = -1;
+			lrSpeed = -3;
 		}
 		if(Input.GetKeyDown(KeyCode.D)){
-			lrSpeed = 1;
+			lrSpeed = 3;
 		}
 		if(Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A)){
 			lrSpeed = 0;
 		}
 		if(Input.GetKeyDown(KeyCode.W)){
-			udSpeed = 1;
+			udSpeed = 3;
 		}
 		if(Input.GetKeyDown(KeyCode.S)){
-			udSpeed = -1;
+			udSpeed = -3;
 		}
 		if(Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.S)){
 			udSpeed = 0;
@@ -138,7 +155,12 @@ function Update(){
 
 	vesselMap.SetSpeed(vesselMap.player, moveSpeed);
 	vesselMap.Move(vesselMap.player, Time.deltaTime);
-	vesselMap.ItemHit(vesselMap.player);
+	if(vesselMap.ItemHit(vesselMap.player)){
+		vesselMap.cam.instance.SendMessage("hit");
+	}
+	
+	vesselMap.player.instance.transform.position = vesselMap.player.position;
+	vesselMap.player.instance.transform.rotation = vesselMap.player.rotation;
 	
 	vesselMap.cam.instance.transform.position = vesselMap.player.camPos;
 	vesselMap.cam.instance.transform.rotation = vesselMap.player.camRot;
@@ -361,17 +383,22 @@ public class Map{
 		return vess;
 	}
 	
-	public function ItemHit(cell : Cell){
+	public function ItemHit(cell : Cell) : boolean{
 		var vess : Vessel = map[cell.curVess - vesselOff];
 		var item : BloodItem;
+		var hasHitVirus = false;
 		for (var j = 0; j < vess.items.length; ++j){
 			item = vess.items[j];
 			if(item.OnCollision(cell)){
 				GameObject.Destroy(item.instance, 0);
 				vess.items.remove(item);
 				item.ActOn(cell);
+				if(item.itemType == 1){
+					hasHitVirus = true;
+				}
 			}
 		}
+		return hasHitVirus;
 	}
 	
 }
@@ -451,11 +478,11 @@ public class Cell{
 		camPos = position - 2 * rad * lookat;
 		
 		position += (rad - radius) * (rotation * posOff);
-		
+	/*	
 		if(instance != null){
 			instance.transform.position = position;
 			instance.transform.rotation = rotation;
-		}
+		}*/
 		camRot = Quaternion.LookRotation(lookat, up);
 	}
 	
@@ -630,7 +657,7 @@ public class Vessel{
 		var posOff = Vector3(off.x, off.y, 0);
 		var itemRad = 0.2;
 		if(type == 1){
-			itemRad = 0.3;
+			itemRad = 0.4;
 		}
 		var rot = Quaternion.LookRotation(-lookat, up);
 		pos = pos + (rad - itemRad) * (Quaternion.LookRotation(lookat, up) * up);
@@ -646,7 +673,7 @@ public class Vessel{
 	//	var posOff = Vector3(off.x, off.y, 0);
 		var itemRad = 0.2;
 		if(type == 1){
-			itemRad = 0.3;
+			itemRad = 0.4;
 		}
 		var rot = Quaternion.LookRotation(-lookat, up);
 		pos = pos - off * (rad - itemRad) * up;

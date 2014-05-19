@@ -1,7 +1,7 @@
 ﻿#pragma strict
 
 var scriptCarrier: GameObject;
-var other : MainLogic = gameObject.GetComponent(MainLogic);
+var other : MainLogic;// = gameObject.GetComponent(MainLogic);
 
 var test = false; // for test
 
@@ -13,8 +13,12 @@ var perlinRange :float = 10;
 var originalPos :Vector3;
 
 function Start(){
-	
+	other = gameObject.GetComponent(MainLogic);
 	//originalPos = transform.position;
+}
+
+function hit(){
+	test = true;
 }
 
 function doShake(){
