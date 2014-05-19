@@ -2,8 +2,15 @@
 
 //these are tubes and its prefabs
 
-var TU_0 : GameObject;
-var TU_1 : GameObject;
+var ST_1_1_2 : GameObject;
+var ST_1_1h_4 : GameObject;
+var ST_1h_1_4 : GameObject;
+var ST_1h_1h_3 : GameObject;
+
+var BT_1_1_30 : GameObject;
+var BT_1_2_30 : GameObject;
+var BT_1_3_30 : GameObject;
+var BT_1_2_60 : GameObject;
 
 var CELL : GameObject;
 var CAM : GameObject;
@@ -36,10 +43,28 @@ function InstantiateVessel(vess : Vessel){
 	var item : BloodItem;
 	switch (vess.vessType){
 			case 0:
-				vess.instance = Instantiate(TU_0, vess.startPoint, vess.quaRotation);
+				vess.instance = Instantiate(ST_1_1_2, vess.startPoint, vess.quaRotation);
 				break;
 			case 1:
-				vess.instance = Instantiate(TU_1, vess.startPoint, vess.quaRotation);
+				vess.instance = Instantiate(BT_1_2_60, vess.startPoint, vess.quaRotation);
+				break;
+			case 2:
+				vess.instance = Instantiate(ST_1_1h_4, vess.startPoint, vess.quaRotation);
+				break;
+			case 3:
+				vess.instance = Instantiate(BT_1_1_30, vess.startPoint, vess.quaRotation);
+				break;
+			case 4:
+				vess.instance = Instantiate(ST_1h_1h_3, vess.startPoint, vess.quaRotation);
+				break;
+			case 5:
+				vess.instance = Instantiate(BT_1_2_30, vess.startPoint, vess.quaRotation);
+				break;
+			case 6:
+				vess.instance = Instantiate(ST_1h_1_4, vess.startPoint, vess.quaRotation);
+				break;
+			case 7:
+				vess.instance = Instantiate(BT_1_3_30, vess.startPoint, vess.quaRotation);
 				break;
 		}
 	//	vess.AddItemRandom(0);
@@ -135,6 +160,14 @@ public class Map{
 	public var vesselOff : int;
 	public var newVessel : int;
 	
+	//paras for random map generation
+	public var curVesselRadius : float;
+	public var curATPRotate : float;
+	public var ATPnum : int;
+	public var ATPoff : int;
+	public var numOfBT : int;
+	public var ATPGap : int;
+	public var virusGap : int;
 	
 	public function Map(){
 		mode = 0;
@@ -142,25 +175,10 @@ public class Map{
 		lastPoint = Vector3.zero;
 		lastRotation = Quaternion(0, 0, 0, 1);
 		//now it's only a randon map
-		AddVessel(0);
-		AddVessel(1);
-		AddVessel(0);
-		AddVessel(0);
-		AddVessel(0);
-		AddVessel(1);
-		AddVessel(0);
-		AddVessel(0);
-		AddVessel(1);
-		AddVessel(1);
-		AddVessel(0);
-		AddVessel(0);
-		AddVessel(0);
-		AddVessel(0);
-		AddVessel(0);
-		AddVessel(1);
-		AddVessel(1);
-		AddVessel(0);		
-		
+		AddVessel(0);AddVessel(1);AddVessel(0);AddVessel(0);AddVessel(0);
+		AddVessel(1);AddVessel(0);AddVessel(0);AddVessel(1);AddVessel(1);
+		AddVessel(0);AddVessel(0);AddVessel(0);AddVessel(0);AddVessel(0);
+		AddVessel(1);AddVessel(1);AddVessel(0);			
 		player = new Cell(0, 0.15, 0, 0, map, 0);
 		//cam = new Cell(13, 0, 1, 17, map);
 		cam = new Cell(13, 0, 1, 17, map, 0);
@@ -187,7 +205,7 @@ public class Map{
 		var rots = cell.RealRotate() * Mathf.PI / 180.0;
 		var speedModifier : float = 1;
 		if(vess.vessType%2 != 0){
-			speedModifier = 1.0 / (1 - Mathf.Cos(rots) * cell.posOff.magnitude * vess.radius/vess.rotateRadius);
+			speedModifier = 1.0 / (1 - 0.5 * Mathf.Cos(rots) * cell.posOff.magnitude * vess.radius/vess.rotateRadius);
 		}
 		var nextPos = vess.NextCentPos(cell.centPos, cell.speed * speedModifier, time);
 		cell.distance += nextPos - cell.centPos;
@@ -196,28 +214,11 @@ public class Map{
 		
 		if (cell.centPos > vess.vessLength){
 			if(mode == 2){
-				//destroy the vessels
-				var oldVess : Vessel = map[0];
-				var item : BloodItem;
-				for(var j = 0; j < oldVess.items.length; ++j){
-					item = oldVess.items[j];
-					GameObject.Destroy(item.instance, 0);
-				}
-				GameObject.Destroy(oldVess.instance, 0);
-				map.RemoveAt(0);
-				vesselOff += 1;
-				if (Random.value > 0.7){
-					AddVessel(1);
-				}
-				else {
-					AddVessel(0);
-				}
+			//destroy the vessels
+				AbandonVessel();
+				RandomGenerateVessel();	
 			}
-			cell.centPos -= vess.vessLength;
-			cell.curVess += 1;
-			// at the end
-			vess = map[cell.curVess - vesselOff];
-			cell.Rotate(-vess.modRotation);
+			vess = SwitchToNextVessel(cell, vess);
 		}
 		//------------switch mode-------------------------------------------
 		if(cell.onSwitch){
@@ -225,9 +226,6 @@ public class Map{
 		}
 		//-----------------------------------
 		cell.UpdatePos(vess);	
-/*		if( cell == player){
-			cam.instance.transform.position = cell.position 
-		}*/
 	}
 	
 	public function SetSpeed(cell : Cell, sp : float){
@@ -239,7 +237,80 @@ public class Map{
 		cell.UpdatePos(map[cell.curVess - vesselOff]);
 	}
 	
-	public function AddVessel(type: int){
+	public function AbandonVessel(){
+		var oldVess : Vessel = map[0];
+		var item : BloodItem;
+		for(var j = 0; j < oldVess.items.length; ++j){
+			item = oldVess.items[j];
+			GameObject.Destroy(item.instance, 0);
+		}
+		GameObject.Destroy(oldVess.instance, 0);
+		if(oldVess.vessType % 2 != 0)
+			numOfBT -= 1;
+		map.RemoveAt(0);
+		vesselOff += 1;
+	}
+	
+	public function SwitchToNextVessel(cell : Cell, vess : Vessel) : Vessel{
+		cell.centPos -= vess.vessLength;
+		cell.curVess += 1;
+		// at the end
+		vess = map[cell.curVess - vesselOff];	
+		cell.Rotate(-vess.modRotation);
+		return vess;
+	}
+	
+	public function RandomGenerateVessel(){
+		var vess : Vessel;
+		if(numOfBT < 3){
+			vess = AddVessel(1);
+			numOfBT += 1;
+		}
+		else {	
+			if (Random.value > 0.7){
+				vess = AddVessel(1);
+				numOfBT += 1;
+			}
+			else {
+				vess = AddVessel(0);
+			}
+		}
+		
+		//ATP generation
+		curATPRotate -= vess.modRotation;
+		ATPoff = 1;
+		if(ATPGap > 0){ // add no ATP
+			ATPGap -= 1;
+			if(ATPGap == 0){
+				ATPnum = 0;
+				curATPRotate = Random.Range(0, 360);
+				//currently use ground 
+				ATPoff = 1;
+			}
+		}
+		else { // add ATP
+			var num = 2;
+			var perLen = vess.vessLength / num;
+			for(var i = 0; i < num; i++){
+				vess.AddItem(0, perLen * i, curATPRotate, ATPoff);
+			}
+			ATPnum += num;
+			if(ATPnum == 5 * num){
+				ATPGap = 3;
+			}
+		}
+		
+		//virus generation
+		if (virusGap > 0){
+			virusGap -= 1;
+		}
+		else {
+			virusGap += 2;
+			vess.AddItemRandom(1);
+		}
+	}
+	
+	public function AddVessel(type: int) : Vessel{
 		var vess : Vessel;
 		switch (type){
 			case 0 :
@@ -250,16 +321,38 @@ public class Map{
 				vess = new Vessel(type, lastPoint, 45, lastRotation, 1);
 				vess.SetProperty(2, 60);
 				break;
+			case 2 :
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 1);
+				vess.SetProperty(4, 1.5);
+				break;
+			case 3 :
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 1);
+				vess.SetProperty(1, 30);
+				break;
+			case 4 :
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 1.5);
+				vess.SetProperty(3, 1.5);
+				break;
+			case 5 :
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 1);
+				vess.SetProperty(2, 30);
+				break;
+			case 6 :
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 1.5);
+				vess.SetProperty(4, 1);
+				break;
+			case 7 :
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 1);
+				vess.SetProperty(3, 30);
+				break;
 			default :
 				break;
-		}
-		for (var i = 0; i < 2; ++i){
-			vess.AddItemRandom(0);
 		}
 		map.Push(vess);
 		newVessel += 1;
 		lastPoint = vess.endPoint;
 		lastRotation = vess.endRotation;
+		return vess;
 	}
 	
 	public function ItemHit(cell : Cell){
@@ -405,7 +498,7 @@ public class BloodItem{
 				cell.score += 1;
 				break;
 			case 1:
-				cell.score -= 1;
+				cell.score -= 10;
 				break;
 			default:
 				break;
@@ -527,8 +620,27 @@ public class Vessel{
 		var rad = GetRadius(cp);
 		var off = Random.insideUnitCircle;
 		var posOff = Vector3(off.x, off.y, 0);
-		pos = pos + (rad - 0.1) * (Quaternion.LookRotation(lookat, up) * up);
-		var item = new BloodItem(type, 0.1, pos);
+		var itemRad = 0.1;
+		if(type == 1){
+			itemRad = 0.2;
+		}
+		pos = pos + (rad - itemRad) * (Quaternion.LookRotation(lookat, up) * up);
+		var item = new BloodItem(type, itemRad, pos);
+		items.Add(item);
+	}
+	
+	public function AddItem(type : int, cp : float, ra : float, off : float){
+		var pos = CentPos2RealPos(cp);
+		var lookat = CentPos2ForwardDir(cp);
+		var up = GetUpDir(cp, ra);
+		var rad = GetRadius(cp);
+	//	var posOff = Vector3(off.x, off.y, 0);
+		var itemRad = 0.1;
+		if(type == 1){
+			itemRad = 0.2;
+		}
+		pos = pos - off * (rad - itemRad) * up;
+		var item = new BloodItem(type, itemRad, pos);
 		items.Add(item);
 	}
 }
