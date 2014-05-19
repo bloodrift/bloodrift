@@ -14,7 +14,8 @@ var BT_1_2_60 : GameObject;
 
 var CELL : GameObject;
 var CAM : GameObject;
-var ADDONE : GameObject;
+var ATP : GameObject;
+var VIRUS : GameObject;
 
 var GUI_ : GameObject;
 
@@ -70,7 +71,12 @@ function InstantiateVessel(vess : Vessel){
 	//	vess.AddItemRandom(0);
 	for (var j = 0; j < vess.items.length; ++j){
 		item = vess.items[j];
-		item.instance = Instantiate(ADDONE, item.position, Quaternion(0, 0, 0, 1));
+		if(item.itemType == 0){
+			item.instance = Instantiate(ATP, item.position, item.rotation);
+		}
+		else{ 
+			item.instance = Instantiate(VIRUS, item.position, item.rotation);
+		}
 	}
 }
 
@@ -138,7 +144,7 @@ function Update(){
 	vesselMap.cam.instance.transform.rotation = vesselMap.player.camRot;
 	
 	//Debug.Log(vesselMap.player.distance);
-	GUI_.SendMessage("increaseDistance",vesselMap.player.distance);
+	GUI_.SendMessage("increaseDistance", vesselMap.player.distance);
 	moveSpeed = Mathf.Log(vesselMap.player.distance+8);
 	
 	Spark.transform.position = vesselMap.player.camPos + vesselMap.player.camRot * Vector3(0,0,5);
@@ -477,12 +483,14 @@ public class BloodItem{
 	public var itemType : int;
 	public var radius : float;
 	public var position : Vector3;
+	public var rotation : Quaternion;
 	public var instance : GameObject;
 	
-	public function BloodItem(type : int, r : float, pos : Vector3){	
+	public function BloodItem(type : int, r : float, pos : Vector3, rot : Quaternion){	
 		itemType = type;
 		radius = r;
 		position = pos;
+		rotation = rot;
 	}
 	
 	public function OnCollision(cell : Cell) : boolean{
@@ -620,12 +628,13 @@ public class Vessel{
 		var rad = GetRadius(cp);
 		var off = Random.insideUnitCircle;
 		var posOff = Vector3(off.x, off.y, 0);
-		var itemRad = 0.1;
+		var itemRad = 0.2;
 		if(type == 1){
-			itemRad = 0.2;
+			itemRad = 0.3;
 		}
+		var rot = Quaternion.LookRotation(-lookat, up);
 		pos = pos + (rad - itemRad) * (Quaternion.LookRotation(lookat, up) * up);
-		var item = new BloodItem(type, itemRad, pos);
+		var item = new BloodItem(type, itemRad, pos, rot);
 		items.Add(item);
 	}
 	
@@ -635,12 +644,13 @@ public class Vessel{
 		var up = GetUpDir(cp, ra);
 		var rad = GetRadius(cp);
 	//	var posOff = Vector3(off.x, off.y, 0);
-		var itemRad = 0.1;
+		var itemRad = 0.2;
 		if(type == 1){
-			itemRad = 0.2;
+			itemRad = 0.3;
 		}
+		var rot = Quaternion.LookRotation(-lookat, up);
 		pos = pos - off * (rad - itemRad) * up;
-		var item = new BloodItem(type, itemRad, pos);
+		var item = new BloodItem(type, itemRad, pos, rot);
 		items.Add(item);
 	}
 }
