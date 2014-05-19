@@ -18,6 +18,9 @@ static var vesselMap = new Map(2);
 static function getCamPos(){
 	return vesselMap.player.camPos;
 }
+static function getScore(){
+	return vesselMap.player.score;
+}
 
 function Start(){
 	// initialize models in real scene
@@ -54,13 +57,6 @@ static var moveSpeed : float;
 static var lrSpeed : float = 0;
 static var udSpeed : float = 0;
 
-var MAX_MOVE_SPEED :float = 8 ;
-var MIN_MOVE_SPEED :float = 0 ;
-
-//var moveSpeed = 1; 		// m/s
-private var acceleration :float = 0.2 ; 	//m/s2
-private var brakeAcceleration :float = 0.5 ;
-
 function Update(){
 	while(vesselMap.newVessel > 0){
 		InstantiateVessel(vesselMap.map[vesselMap.map.length - vesselMap.newVessel]);
@@ -68,10 +64,10 @@ function Update(){
 	}
 	if(vesselMap.player.mode == 0){
 		if(Input.GetKeyDown(KeyCode.A)){
-			rotateSpeed = -100;
+			rotateSpeed = -300;
 		}
 		if(Input.GetKeyDown(KeyCode.D)){
-			rotateSpeed = 100;
+			rotateSpeed = 300;
 		}
 		if(Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A)){
 			rotateSpeed = 0;
@@ -81,19 +77,19 @@ function Update(){
 	}
 	else {
 		if(Input.GetKeyDown(KeyCode.A)){
-			lrSpeed = -1;
+			lrSpeed = -3;
 		}
 		if(Input.GetKeyDown(KeyCode.D)){
-			lrSpeed = 1;
+			lrSpeed = 3;
 		}
 		if(Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A)){
 			lrSpeed = 0;
 		}
 		if(Input.GetKeyDown(KeyCode.W)){
-			udSpeed = 1;
+			udSpeed = 3;
 		}
 		if(Input.GetKeyDown(KeyCode.S)){
-			udSpeed = -1;
+			udSpeed = -3;
 		}
 		if(Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.S)){
 			udSpeed = 0;
