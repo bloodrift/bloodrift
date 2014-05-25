@@ -28,6 +28,9 @@ static var vesselMap = new Map(2);
 static function getCamPos(){
 	return vesselMap.player.camPos;
 }
+static function getScore(){
+	return vesselMap.player.score;
+}
 
 static function getScore(){
 	return vesselMap.player.score;
@@ -101,13 +104,6 @@ static var rotateSpeed : float;
 static var moveSpeed : float;
 static var lrSpeed : float = 0;
 static var udSpeed : float = 0;
-
-var MAX_MOVE_SPEED :float = 8 ;
-var MIN_MOVE_SPEED :float = 0 ;
-
-//var moveSpeed = 1; 		// m/s
-private var acceleration :float = 0.2 ; 	//m/s2
-private var brakeAcceleration :float = 0.5 ;
 
 function Update(){
 	while(vesselMap.newVessel > 0){
