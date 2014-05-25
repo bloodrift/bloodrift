@@ -31,6 +31,7 @@ static function getCamPos(){
 static function getScore(){
 	return vesselMap.player.score;
 }
+<<<<<<< HEAD
 
 static function getScore(){
 	return vesselMap.player.score;
@@ -46,6 +47,8 @@ function gameOver(distance : float){
 	Application.LoadLevel("gameover");
 
 }
+=======
+>>>>>>> 8bae61e2dcb66c9ae3ec42c3978c866a85373aa5
 
 function Start(){
 	// initialize models in real scene

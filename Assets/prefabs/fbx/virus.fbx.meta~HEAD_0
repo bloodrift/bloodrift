@@ -1,33 +1,19 @@
 fileFormatVersion: 2
-<<<<<<< HEAD
-guid: 337d973618e343a4495ec6b5dd94495c
-=======
-guid: 7c747e4f2f8ef4f4e90719383c2af797
->>>>>>> 8bae61e2dcb66c9ae3ec42c3978c866a85373aa5
+guid: 5b36e8f80a70ce942adaa59815ef9d38
 ModelImporter:
   serializedVersion: 16
   fileIDToRecycleName:
-    100000: //RootNode
-    100002: Camera_1
-    100004: Cylinder_1
-    100006: Lamp_1
-    100008: Text_1
-    100010: Text_3
-    400000: //RootNode
-    400002: Camera_1
-    400004: Cylinder_1
-    400006: Lamp_1
-    400008: Text_1
-    400010: Text_3
-    2300000: Cylinder_1
-    2300002: Text_1
-    2300004: Text_3
-    3300000: Cylinder_1
-    3300002: Text_1
-    3300004: Text_3
-    4300000: Cylinder_1
-    4300002: Text_3
-    4300004: Text_1
+    100000: Camera
+    100002: Icosphere
+    100004: Lamp
+    100006: //RootNode
+    400000: Camera
+    400002: Icosphere
+    400004: Lamp
+    400006: //RootNode
+    2300000: Icosphere
+    3300000: Icosphere
+    4300000: Icosphere
     7400000: Default Take
     9500000: //RootNode
   materials:
