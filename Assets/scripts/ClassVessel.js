@@ -105,37 +105,13 @@ public class Vessel{
 		}
 	}
 	
-	public function AddItemRandom(type : int){
-		var cp = Random.Range(0, vessLength);
-		var pos = CentPos2RealPos(cp);
-		var lookat = CentPos2ForwardDir(cp);
-		var up = GetUpDir(cp, Random.Range(0, 360));
-		var rad = GetRadius(cp);
-		var off = Random.insideUnitCircle;
-		var posOff = Vector3(off.x, off.y, 0);
-		var itemRad = 0.2;
-		if(type == 1){
-			itemRad = 0.4;
-		}
-		var rot = Quaternion.LookRotation(-lookat, up);
-		pos = pos + (rad - itemRad) * (Quaternion.LookRotation(lookat, up) * up);
-		var item = new BloodItem(type, itemRad, pos, rot);
-		items.Add(item);
-	}
-	
-	public function AddItem(type : int, cp : float, ra : float, off : float){
+	public function AddItem(type : int, itemRad : float, cp : float, ra : float, off : float){
 		var pos = CentPos2RealPos(cp);
 		var lookat = CentPos2ForwardDir(cp);
 		var up = GetUpDir(cp, ra);
-		var rad = GetRadius(cp);
-	//	var posOff = Vector3(off.x, off.y, 0);
-		var itemRad = 0.2;
-		if(type == 1){
-			itemRad = 0.4;
-		}
 		var rot = Quaternion.LookRotation(-lookat, up);
-		pos = pos - off * (rad - itemRad) * up;
-		var item = new BloodItem(type, itemRad, pos, rot);
+		pos = pos - (GetRadius(cp) - itemRad) * off * up;
+		var item = new BloodItem(type, itemRad, pos, rot, cp);
 		items.Add(item);
 	}
 }

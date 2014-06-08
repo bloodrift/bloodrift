@@ -11,12 +11,15 @@ public class Map{
 	
 	//paras for random map generation
 	public var curVesselRadius : float;
-	public var curATPRotate : float;
-	public var ATPnum : int;
-	public var ATPoff : int;
 	public var numOfBT : int;
-	public var ATPGap : int;
-	public var virusGap : int;	
+	//FSM
+	private var ATPnum : int;
+	private var ATPgap : int;
+	private var ATPcentPos : float;
+	private var ATProt : float;
+	private var ATPoff : float;
+	
+	private var VIRUSnum : int;
 	
 	public function Map(){
 		map = new Array();
@@ -24,11 +27,14 @@ public class Map{
 		lastRotation = Quaternion(0, 0, 0, 1);
 		vesselOff = 0;
 		for (var i = 0; i < 7; ++i){
-			AddVessel(0);	
+			AddVessel(0);
 		}
-		AddVessel(1);AddVessel(1);AddVessel(1);
-		player = new Cell(0, 0.15, 0, 1, map, 0);
-		cam = new Cell(13, 0, 1, 0, map, 0);
+		for (var j = 0; j < 3; ++j){
+			AddVessel(1);
+		}
+		curVesselRadius = 1;
+		player = new Cell(0, 0.15, 1, map, 0);
+		cam = new Cell(13, 0, 1, map, 0);
 	}
 	
 	public function Move(cell : Cell, time : float){
@@ -58,7 +64,9 @@ public class Map{
 		cell.distance += nextPos - cell.centPos;
 		cell.centPos = nextPos;
 		
-		cell.Rotate(time);
+		//calculate rotate force
+		cell.Shift(vess, time);
+
 		// go to the next vessel--------------------------
 		
 		if (cell.centPos > vess.vessLength){
@@ -66,10 +74,6 @@ public class Map{
 			AbandonVessel();
 			RandomGenerateVessel();	
 			vess = SwitchToNextVessel(cell, vess);
-		}
-		//------------switch mode-------------------------------------------
-		if(cell.onSwitch){
-			cell.SmoothPosOff(time);
 		}
 		//-----------------------------------
 		cell.UpdatePos(vess);	
@@ -79,8 +83,8 @@ public class Map{
 		cell.speed = sp;
 	}
 	
-	public function SetRotateForce(cell : Cell, rf : float){
-		cell.rotateForce = rf;
+	public function SetShiftForce(cell : Cell, sf : Vector3){
+		cell.posForce = sf;
 	}
 	
 	public function AbandonVessel(){
@@ -103,82 +107,116 @@ public class Map{
 		// at the end
 		vess = map[cell.curVess - vesselOff];
 		cell.rotateAngle -= vess.modRotation;
-
-		if(vess.vessType % 2 != 0){	
-			var rr = -100 *(1 + cell.speed / 14) * Mathf.Sin(cell.RealRotate() * Mathf.PI / 180.0);
-			Debug.Log(cell.RealRotate());
-			Debug.Log(rr);
-			cell.rotateSpeed -= rr;
-		}
-		if(cell.rotateSpeed < -Global.maxRotateSpeed)
-			cell.rotateSpeed = -Global.maxRotateSpeed;
-		if(cell.rotateSpeed > Global.maxRotateSpeed)
-			cell.rotateSpeed = Global.maxRotateSpeed;
-			
 		return vess;
+	}
+	
+	private function rand(num : int): int{
+		var x = Random.value;
+		if (x == 1)
+			x = 0;
+		return Mathf.Floor(x * num);
 	}
 	
 	public function RandomGenerateVessel(){
 		var vess : Vessel;
-		if(numOfBT < 3){
-			vess = AddVessel(1);
+		Random.seed = Time.realtimeSinceStartup;
+		var x : int;
+		while (true){
+			x = rand(7);
+			if (curVesselRadius == 1 && x > 3)
+				continue;
+			if (curVesselRadius == 2 && x < 4)
+				continue;
+			if (numOfBT < 3 && x % 2 == 0)
+				continue;
+			break;
+		}
+		if (x % 2 != 0)
 			numOfBT += 1;
-		}
-		else {	
-			if (Random.value > 0.7){
-				vess = AddVessel(1);
-				numOfBT += 1;
+		if (x <= 1 || x == 3 || x == 6)
+			curVesselRadius = 1;
+		else curVesselRadius = 2;
+		vess = AddVessel(x);
+		//-------------generate items-----------------------//
+		while(ATPcentPos < vess.vessLength){
+			if(ATPnum == 0){
+				ATProt = 360 * Random.value;
+				ATPoff = Random.value;
 			}
-			else {
-				vess = AddVessel(0);
+			if(ATPnum >= 10){
+				ATPnum = -10;
 			}
+			if(ATPnum >= 0){
+				vess.AddItem(Global.typeATP, Global.ATPradius, ATPcentPos, ATProt, ATPoff);
+			}
+			ATPnum ++;
+			ATPcentPos += Global.ATPgap;
 		}
+		ATPcentPos -= vess.vessLength;
 		
-		//ATP generation
-		curATPRotate -= vess.modRotation;
-		ATPoff = 1;
-		if(ATPGap > 0){ // add no ATP
-			ATPGap -= 1;
-			if(ATPGap == 0){
-				ATPnum = 0;
-				curATPRotate = Random.Range(0, 360);
-				//currently use ground 
-				ATPoff = 1;
-			}
+		if(VIRUSnum >= 0){
+			var vcp = Random.value * (vess.vessLength - Global.VIRUSradius);
+			var vrot = 360 * Random.value;
+			var voff = Random.value;
+			vess.AddItem(Global.typeVIRUS, Global.VIRUSradius, vcp, vrot, voff);
+			VIRUSnum = -1;
 		}
-		else { // add ATP
-			var num = 2;
-			var perLen = vess.vessLength / num;
-			for(var i = 0; i < num; i++){
-				vess.AddItem(0, perLen * i, curATPRotate, ATPoff);
-			}
-			ATPnum += num;
-			if(ATPnum == 5 * num){
-				ATPGap = 3;
-			}
-		}
+		else VIRUSnum = 11;
+	}
+	
+	
 		
-		//virus generation
-		if (virusGap > 0){
-			virusGap -= 1;
-		}
-		else {
-			virusGap += 2;
-			vess.AddItemRandom(1);
+	public function ItemHit(cell : Cell){
+		var vess : Vessel = map[cell.curVess - vesselOff];
+		var item : BloodItem;
+		for (var j = 0; j < vess.items.length; ++j){
+			item = vess.items[j];
+			if(item.OnCollision(cell)){
+				GameObject.Destroy(item.instance, 0);
+				vess.items.remove(item);
+			//	item.ActOn(cell);
+			}
+			else if (item.centPos < cell.centPos - 1){
+				GameObject.Destroy(item.instance, 0);
+				vess.items.remove(item);
+			}
 		}
 	}
+	
 	
 	public function AddVessel(type: int) : Vessel{
 		var vess : Vessel;
 		switch (type){
 			case 0 :
 				vess = new Vessel(type, lastPoint, 0, lastRotation, 1);
-				vess.SetProperty(2, 1);
+				vess.SetProperty(1.95, 1);
 				break;
+			case 2 :
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 1);
+				vess.SetProperty(1.95, 2);
+				break;
+			case 4 :
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 2);
+				vess.SetProperty(3.9, 2);
+				break;
+			case 6 :
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 2);
+				vess.SetProperty(1.95, 1);
+				break;
+				
 			case 1 :
-				vess = new Vessel(type, lastPoint, 45, lastRotation, 1);
-				vess.SetProperty(2, 60);
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 1);
+				vess.SetProperty(3, 29);
 				break;
+			case 3 :
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 1);
+				vess.SetProperty(5, 29);
+				break;
+			case 5 :
+				vess = new Vessel(type, lastPoint, 0, lastRotation, 2);
+				vess.SetProperty(6, 29);
+				break;
+		
 			default :
 				break;
 		}
@@ -188,23 +226,5 @@ public class Map{
 		lastRotation = vess.endRotation;
 		return vess;
 	}
-	
-	public function ItemHit(cell : Cell) : boolean{
-		var vess : Vessel = map[cell.curVess - vesselOff];
-		var item : BloodItem;
-		var hasHitVirus = false;
-		for (var j = 0; j < vess.items.length; ++j){
-			item = vess.items[j];
-			if(item.OnCollision(cell)){
-				GameObject.Destroy(item.instance, 0);
-				vess.items.remove(item);
-				item.ActOn(cell);
-				if(item.itemType == 1 && !cell.onRush){
-					hasHitVirus = true;
-				}
-			}
-		}
-		return hasHitVirus;
-	}
-	
+
 }
