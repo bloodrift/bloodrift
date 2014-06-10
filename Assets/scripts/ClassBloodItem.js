@@ -17,8 +17,9 @@ public class BloodItem{
 	}
 	
 	public function OnCollision(cell : Cell) : boolean{
+		var cellRadius = cell.getRadiusInDir(cell.position - position);
 		var sqrDis = (cell.position - position).sqrMagnitude;
-		if(sqrDis < (cell.radius + radius) * (cell.radius + radius))
+		if(sqrDis < (cellRadius + radius) * (cellRadius + radius))
 			return true;
 		return false;
 	}

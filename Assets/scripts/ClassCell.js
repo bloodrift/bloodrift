@@ -77,14 +77,15 @@ public class Cell{
 		var shiftRotForce : Vector3 = Vector3.zero;
 		if (vess.vessType%2 != 0)
 			shiftRotForce = (0.5 + speed / 28.0) * (Quaternion.AngleAxis(-rotateAngle, Vector3(0, 0, 1)) * Vector3(0, Global.gravity * Global.maxShiftForce, 0));
-
 		posSpeed += (drag + posForce + shiftRotForce) * 0.5 * time;
-	
-		selfRot = Quaternion.AngleAxis(posOff.magnitude * 360, Vector3(posOff.y, -posOff.x, 0));
-	
+		
+		selfRot = Quaternion.AngleAxis(posOff.magnitude * 270, Vector3(posOff.y, -posOff.x, 0));
 		posOff += posSpeed * time;
-		if(posOff.sqrMagnitude > vess.radius * vess.radius){
-			posOff = vess.radius * posOff.normalized;
+		
+		var cellRadius = getRadiusInDir(vess.GetUpDir(centPos, RealRotate()));
+		if(posOff.magnitude + cellRadius> vess.radius){
+			posOff = (vess.radius - cellRadius) * posOff.normalized;
+			posSpeed = -Global.BoundFactor * posOff.normalized; 
 		}
 	}
 	
@@ -106,13 +107,17 @@ public class Cell{
 		// to modified by speed later
 		camPos = position - 2 * lookat;
 		camRot = Quaternion.LookRotation(lookat, up);
-		
 		t_camPos = (t_camPos + camPos)/2;
 		
 		//position += (rad - radius) *(rotation * posOff);
 		position += rotation * posOff;
 	//	rotation = rotation * Quaternion.AngleAxis(selfVrot, Vector3(0, 0, 1)) * Quaternion.AngleAxis(selfHrot, Vector3(0, 1, 0));
 		rotation = rotation * selfRot;
-		
+	}
+	
+	public function getRadiusInDir(dir : Vector3) : double{
+		var rot = rotation * selfRot * Vector3(0, 0, 1);
+		var angle = Vector3.Angle(dir, rot);
+		return Mathf.Sin(angle * Mathf.PI / 180) * radius;
 	}
 }

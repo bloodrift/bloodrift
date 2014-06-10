@@ -33,6 +33,7 @@ public class Global{
 	static public var ATPradius : float = 0.15;
 	
 	static public var VIRUSradius : float = 0.15;
+	static public var BoundFactor : float = 1.5;
 }
 
 static var vesselMap = new Map();
