@@ -17,12 +17,7 @@ public class Cell{
 	public var rotateAngle : float;
 	
 	//paras for rot
-	public var selfVrot : float;
-	public var selfHrot : float;
-	public var selfVrotSp : float;
-	public var selfHrotSp : float;
-	public var selfVrotForce : float;
-	public var selfHrotForce : float;
+	public var selfRot : Quaternion;
 	
 	//paras for drift mode
 	public var posOff : Vector3;
@@ -81,16 +76,12 @@ public class Cell{
 		else drag = -posSpeed.normalized * shiftDragForce();
 		var shiftRotForce : Vector3 = Vector3.zero;
 		if (vess.vessType%2 != 0)
-			shiftRotForce = (speed / 14.0) * (Quaternion.AngleAxis(-rotateAngle, Vector3(0, 0, 1)) * Vector3(0, Global.maxShiftForce, 0));
+			shiftRotForce = (0.5 + speed / 28.0) * (Quaternion.AngleAxis(-rotateAngle, Vector3(0, 0, 1)) * Vector3(0, Global.gravity * Global.maxShiftForce, 0));
 
 		posSpeed += (drag + posForce + shiftRotForce) * 0.5 * time;
-		
-		selfVrotSp = posSpeed.x * 100;
-		selfHrotSp = posSpeed.y * 100;
-		selfVrot += selfVrotSp * time;
-		selfHrot += selfHrotSp * time;
-		
-	//	Debug.Log(rotateSpeed);
+	
+		selfRot = Quaternion.AngleAxis(posOff.magnitude * 360, Vector3(posOff.y, -posOff.x, 0));
+	
 		posOff += posSpeed * time;
 		if(posOff.sqrMagnitude > vess.radius * vess.radius){
 			posOff = vess.radius * posOff.normalized;
@@ -120,7 +111,8 @@ public class Cell{
 		
 		//position += (rad - radius) *(rotation * posOff);
 		position += rotation * posOff;
-		rotation = rotation * Quaternion.AngleAxis(selfVrot, Vector3(0, 0, 1)) * Quaternion.AngleAxis(selfHrot, Vector3(0, 1, 0));
+	//	rotation = rotation * Quaternion.AngleAxis(selfVrot, Vector3(0, 0, 1)) * Quaternion.AngleAxis(selfHrot, Vector3(0, 1, 0));
+		rotation = rotation * selfRot;
 		
 	}
 }

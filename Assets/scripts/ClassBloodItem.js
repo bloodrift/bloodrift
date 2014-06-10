@@ -22,5 +22,18 @@ public class BloodItem{
 			return true;
 		return false;
 	}
+	
+	public function ActOn(cell : Cell, cam : Cell){
+		switch (itemType){
+			case Global.typeATP :
+				cell.energy += 1;
+				break;
+			case Global.typeVIRUS :
+				cell.life -= 1;
+				var Perlin_Noise : Perlin_Noise = cam.instance.GetComponent(Perlin_Noise);
+				Perlin_Noise.test = true;
+				break;
+		}
+	}
 }
 //---------------------------------------------------------------------------------------------------------

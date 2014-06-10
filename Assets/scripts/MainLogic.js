@@ -22,7 +22,8 @@ var Spark : GameObject;
 public class Global{
 	static public var rushSpeed : float = 15;
 	static public var maxShiftSpeed : float = 3;
-	static public var maxShiftForce : float = 9;
+	static public var maxShiftForce : float = 12;
+	static public var gravity : float = 0.6;
 	
 	
 	static public var typeATP : int = 0;
@@ -31,7 +32,7 @@ public class Global{
 	static public var ATPgap : float = 0.5;
 	static public var ATPradius : float = 0.15;
 	
-	static public var VIRUSradius : float = 0.25;
+	static public var VIRUSradius : float = 0.15;
 }
 
 static var vesselMap = new Map();
@@ -111,11 +112,16 @@ function Update(){
 	if(Input.GetKeyDown(KeyCode.A)){
 		lrSpeed = -Global.maxShiftForce;
 	}
+	if(Input.GetKeyUp(KeyCode.A)){
+		if(lrSpeed == -Global.maxShiftForce)
+			lrSpeed = 0;
+	}
 	if(Input.GetKeyDown(KeyCode.D)){
 		lrSpeed = Global.maxShiftForce;
 	}
-	if(Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A)){
-		lrSpeed = 0;
+	if(Input.GetKeyUp(KeyCode.D)){
+		if(lrSpeed == Global.maxShiftForce)
+			lrSpeed = 0;
 	}
 	if(Input.GetKeyDown(KeyCode.W)){
 		udSpeed = Global.maxShiftForce;
@@ -123,9 +129,15 @@ function Update(){
 	if(Input.GetKeyDown(KeyCode.S)){
 		udSpeed = -Global.maxShiftForce;
 	}
-	if(Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.S)){
-		udSpeed = 0;
+	if(Input.GetKeyUp(KeyCode.W)){
+		if(udSpeed == Global.maxShiftForce)
+			udSpeed = 0;
 	}
+	if(Input.GetKeyUp(KeyCode.S)){
+		if(udSpeed == -Global.maxShiftForce)
+			udSpeed = 0;
+	}
+		
 	vesselMap.SetShiftForce(vesselMap.player, Vector3(lrSpeed, udSpeed, 0));
 	
 	if(Input.GetKeyDown(KeyCode.C)){

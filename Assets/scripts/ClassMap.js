@@ -43,7 +43,7 @@ public class Map{
 		var rots = cell.RealRotate() * Mathf.PI / 180.0;
 		var speedModifier : float = 1;
 		if(vess.vessType%2 != 0){
-			speedModifier = 1.0 / (1 - 0.5 * Mathf.Cos(rots) * cell.posOff.magnitude * vess.radius/vess.rotateRadius);
+			speedModifier = 1.0 / (1 - 0.1 * Mathf.Cos(rots) * cell.posOff.magnitude * vess.radius/vess.rotateRadius);
 		}
 		var nextPos : float;
 		if (!cell.onRush)
@@ -141,7 +141,7 @@ public class Map{
 		while(ATPcentPos < vess.vessLength){
 			if(ATPnum == 0){
 				ATProt = 360 * Random.value;
-				ATPoff = Random.value;
+				ATPoff = Random.value * 3 / 5 + 0.2;
 			}
 			if(ATPnum >= 10){
 				ATPnum = -10;
@@ -157,7 +157,7 @@ public class Map{
 		if(VIRUSnum >= 0){
 			var vcp = Random.value * (vess.vessLength - Global.VIRUSradius);
 			var vrot = 360 * Random.value;
-			var voff = Random.value;
+			var voff = Random.value/2 + 0.5;
 			vess.AddItem(Global.typeVIRUS, Global.VIRUSradius, vcp, vrot, voff);
 			VIRUSnum = -1;
 		}
@@ -174,12 +174,12 @@ public class Map{
 			if(item.OnCollision(cell)){
 				GameObject.Destroy(item.instance, 0);
 				vess.items.remove(item);
-			//	item.ActOn(cell);
+				item.ActOn(cell, cam);
 			}
-			else if (item.centPos < cell.centPos - 1){
+		/*	else if (item.centPos < cell.centPos - 1){
 				GameObject.Destroy(item.instance, 0);
 				vess.items.remove(item);
-			}
+			}*/
 		}
 	}
 	
