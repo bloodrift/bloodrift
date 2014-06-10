@@ -1,11 +1,7 @@
-﻿
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using System.Collections;
-//You must include these namespaces
-//to use BinaryFormatter
 using System;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
