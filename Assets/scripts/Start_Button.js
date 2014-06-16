@@ -1,7 +1,7 @@
 ﻿#pragma strict
 
 var Start_Page : GameObject;
-var Menu_Page : GameObject;
+var Menu_Page  : GameObject;
 
 function OnClick(){
 

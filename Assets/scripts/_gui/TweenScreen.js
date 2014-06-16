@@ -10,6 +10,10 @@ function Start () {
 	
 }
 
+function onTweenFinished(){
+	
+}
+
 function onTween(){
 	test = false;
 }
@@ -23,11 +27,11 @@ function Update () {
 	if(test){
 		//script.OnDisable();
 		script.enabled = false;
-		widget.enabled = false;
+		//widget.enabled = false;
 	}
 	else{
 		script.enabled = true;
-		widget.enabled = true;
+		//widget.enabled = true;
 	}
 
 }

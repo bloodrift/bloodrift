@@ -31,18 +31,23 @@ public class PlayerSystem : MonoBehaviour{
 
 	public bool isLoadPlayers = false;
 	public List<Player> players = new List<Player>();
+	public Player curPlayer;
 
-	void savePlayer(){
+	// called when user close the game program.
+	// save all information back to computer system.
+	void savePlayers(){
 		BinaryFormatter b = new BinaryFormatter();
 		MemoryStream m = new MemoryStream();
 		b.Serialize(m, players);
 
-		Debug.Log( m.ToString() );
+		//Debug.Log( m.ToString() );
 
 		PlayerPrefs.SetString("players",Convert.ToBase64String(m.GetBuffer()));
 	}
 
-	void loadPlayer(){
+	// called when the program opened.
+	// load players information from computer system.
+	void loadPlayers(){
 		string d = PlayerPrefs.GetString("players");
 		if( string.IsNullOrEmpty(d) ){
 			Debug.LogError("PlayerSystem: Empty player information!");
@@ -56,9 +61,31 @@ public class PlayerSystem : MonoBehaviour{
 	
 	void newPlayer(string name){
 		if(! isLoadPlayers ){
-			loadPlayer();
+			loadPlayers();
 		}
 		players.Add(Player.newPlayer(name,0));
+	}
+
+	// find the name from playerlist, or create new player
+	public void OnUserEnterName(String name){
+		curPlayer = Player.newPlayer(name,0);
+	}
+
+	// save current player information, update rank, 
+	public void OnGameOver(){
+
+	}
+
+	public List<string> getPlayersName(){
+		List<string> names = new List<string>();
+		foreach(Player p in players){
+			names.Add(p.name);
+		}
+		return names;
+	}
+
+	void OnDestroy(){
+		savePlayers();
 	}
 
 	void initializePlayerSystemForTesting(){
@@ -77,23 +104,23 @@ public class PlayerSystem : MonoBehaviour{
 		players.Clear ();
 	}
 
-	void Start(){
+	void Awake(){
+		
+		DontDestroyOnLoad(gameObject); 
+		//DontDestroyOnLoad(this); 
+
 		//savePlayer();
 		if( ! isLoadPlayers ){
 			players.Clear();
-			loadPlayer ();
+			loadPlayers();
+
 			players.Sort();
 			
 			isLoadPlayers = true;
 			
-			for(int i=0;i< players.Count; i++){
-				Debug.Log( players[i].ToString() );
-			}
+//			for(int i=0;i< players.Count; i++){
+//				Debug.Log( players[i].ToString() );
+//			}
 		}
 	}
-
-	void Update(){
-
-			
-	}
-}
+} 
