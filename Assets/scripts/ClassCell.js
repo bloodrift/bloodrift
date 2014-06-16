@@ -113,11 +113,25 @@ public class Cell{
 		position += rotation * posOff;
 	//	rotation = rotation * Quaternion.AngleAxis(selfVrot, Vector3(0, 0, 1)) * Quaternion.AngleAxis(selfHrot, Vector3(0, 1, 0));
 		rotation = rotation * selfRot;
+		
+		if(instance != null){
+			instance.transform.position = position;
+			instance.transform.rotation = rotation;
+		}
 	}
 	
 	public function getRadiusInDir(dir : Vector3) : double{
 		var rot = rotation * selfRot * Vector3(0, 0, 1);
 		var angle = Vector3.Angle(dir, rot);
 		return Mathf.Sin(angle * Mathf.PI / 180) * radius;
+	}
+	
+	public function OnCollision(cell : Cell) : boolean{
+		var cellRadius = cell.getRadiusInDir(cell.position - position);
+		var myRadius = getRadiusInDir(cell.position - position);
+		var sqrDis = (cell.position - position).sqrMagnitude;
+		if(sqrDis < (cellRadius + myRadius) * (cellRadius + myRadius))
+			return true;
+		return false;
 	}
 }

@@ -8,6 +8,8 @@ public class Map{
 	public var cam : Cell;
 	public var vesselOff : int;
 	public var newVessel : int;
+	public var newCell : int;
+	public var AICells : Array;
 	
 	//paras for random map generation
 	public var curVesselRadius : float;
@@ -33,11 +35,14 @@ public class Map{
 			AddVessel(1);
 		}
 		curVesselRadius = 1;
-		player = new Cell(0, 0.15, 1, map, 0);
-		cam = new Cell(13, 0, 1, map, 0);
+		player = new Cell(Global.typeRedCell, Global.RedCellRadius, Global.mainVessel, map, vesselOff);
+		cam = new Cell(13, 0, Global.mainVessel, map, vesselOff);
+		AICells = new Array();
 	}
 	
-	public function Move(cell : Cell, time : float){
+	public function Move(cell : Cell, time : float) : boolean{
+		if(cell.curVess - vesselOff < Global.mainVessel - 1) 
+			return false;
 		var vess : Vessel = map[cell.curVess - vesselOff];
 		//beneth is a unclear model, we can modify it later
 		var rots = cell.RealRotate() * Mathf.PI / 180.0;
@@ -62,27 +67,35 @@ public class Map{
 		}
 		
 		cell.distance += nextPos - cell.centPos;
+		if(cell == player)
+			cell.speed = Mathf.Log(cell.distance + 8);
+
 		cell.centPos = nextPos;
 		
 		//calculate rotate force
+	//	if(cell == player)
 		cell.Shift(vess, time);
 
 		// go to the next vessel--------------------------
 		
 		if (cell.centPos > vess.vessLength){
 					//destroy the vessels
-			AbandonVessel();
-			RandomGenerateVessel();	
+			if(cell == player){
+				AbandonVessel();
+				RandomGenerateVessel();	
+				//add new AICell
+				var newcell : Cell = AddAICell(Global.typeRedCell, 6 + vesselOff);
+				newcell.speed = cell.speed / 2;
+				newCell++;
+
+			}
 			vess = SwitchToNextVessel(cell, vess);
 		}
 		//-----------------------------------
 		cell.UpdatePos(vess);	
+		return true;
 	}
-	
-	public function SetSpeed(cell : Cell, sp : float){
-		cell.speed = sp;
-	}
-	
+
 	public function SetShiftForce(cell : Cell, sf : Vector3){
 		cell.posForce = sf;
 	}
@@ -137,6 +150,9 @@ public class Map{
 			curVesselRadius = 1;
 		else curVesselRadius = 2;
 		vess = AddVessel(x);
+		
+		if(!Global.gameStart)
+			return;
 		//-------------generate items-----------------------//
 		while(ATPcentPos < vess.vessLength){
 			if(ATPnum == 0){
@@ -161,11 +177,9 @@ public class Map{
 			vess.AddItem(Global.typeVIRUS, Global.VIRUSradius, vcp, vrot, voff);
 			VIRUSnum = -1;
 		}
-		else VIRUSnum = 11;
+		else VIRUSnum = 1;
 	}
 	
-	
-		
 	public function ItemHit(cell : Cell){
 		var vess : Vessel = map[cell.curVess - vesselOff];
 		var item : BloodItem;
@@ -176,15 +190,43 @@ public class Map{
 				vess.items.remove(item);
 				item.ActOn(cell, cam);
 			}
-		/*	else if (item.centPos < cell.centPos - 1){
-				GameObject.Destroy(item.instance, 0);
-				vess.items.remove(item);
-			}*/
 		}
+	}
+	
+	public function AddAICell(cellType : int, curVess : int) : Cell{
+		var radius : float;
+		var cell : Cell;
+		switch (cellType){
+			case Global.typeRedCell :
+				cell = new Cell(Global.typeRedCell, Global.RedCellRadius, curVess, map, vesselOff);
+				break;
+		}
+		//random a position not collider with other cells
+		var vess : Vessel = map[curVess - vesselOff];
+		
+		while (true){
+			var off = Random.insideUnitSphere;
+			var centoff = 0.5 * (1 + off.z) * vess.vessLength; 
+			var posoff : Vector3 = Vector3(off.x, off.y, 0) * (vess.GetRadius(centoff) - radius);
+			cell.centPos = centoff;
+			cell.posOff = posoff;
+			cell.UpdatePos(vess);
+			var i : int;
+			for (i = 0; i < AICells.length; ++i)
+				if(cell.OnCollision(AICells[i])){
+					break;
+				}
+			if(i == AICells.length)
+				break;
+		}
+		
+		AICells.Add(cell);
+		return cell;
 	}
 	
 	
 	public function AddVessel(type: int) : Vessel{
+		var rot = 45 * (rand(3) - 1);
 		var vess : Vessel;
 		switch (type){
 			case 0 :
@@ -205,15 +247,15 @@ public class Map{
 				break;
 				
 			case 1 :
-				vess = new Vessel(type, lastPoint, 0, lastRotation, 1);
+				vess = new Vessel(type, lastPoint, rot, lastRotation, 1);
 				vess.SetProperty(3, 29);
 				break;
 			case 3 :
-				vess = new Vessel(type, lastPoint, 0, lastRotation, 1);
+				vess = new Vessel(type, lastPoint, rot, lastRotation, 1);
 				vess.SetProperty(5, 29);
 				break;
 			case 5 :
-				vess = new Vessel(type, lastPoint, 0, lastRotation, 2);
+				vess = new Vessel(type, lastPoint, rot, lastRotation, 2);
 				vess.SetProperty(6, 29);
 				break;
 		
