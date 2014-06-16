@@ -17,10 +17,24 @@ public class BloodItem{
 	}
 	
 	public function OnCollision(cell : Cell) : boolean{
+		var cellRadius = cell.getRadiusInDir(cell.position - position);
 		var sqrDis = (cell.position - position).sqrMagnitude;
-		if(sqrDis < (cell.radius + radius) * (cell.radius + radius))
+		if(sqrDis < (cellRadius + radius) * (cellRadius + radius))
 			return true;
 		return false;
+	}
+	
+	public function ActOn(cell : Cell, cam : Cell){
+		switch (itemType){
+			case Global.typeATP :
+				cell.energy += 1;
+				break;
+			case Global.typeVIRUS :
+				cell.life -= 1;
+				var Perlin_Noise : Perlin_Noise = cam.instance.GetComponent(Perlin_Noise);
+				Perlin_Noise.test = true;
+				break;
+		}
 	}
 }
 //---------------------------------------------------------------------------------------------------------
