@@ -28,16 +28,23 @@ public class MainUi : MonoBehaviour {
 	public float atpReward = 10;
 
 	void OnShakeScreen(bool isShake){
+		//if(isShake)
+			//shakeScreen.Play(true);
+
 		shakeScreen.enabled   = isShake;
 		shakeScreenBg.enabled = isShake;
 
+		if(!isShake){
+			bloodBarFgTA.alpha = 1;
+		}
 		bloodBarFgTA.enabled = isShake;
+
+
 	}
 	// decrease currentBlood
 	void OnHitVirus(){
 		currentBlood -= virusPunish;
 		if(currentBlood <= 0){
-			Debug.Log("GameOver!!");
 			OnGameOver ();
 			return;
 		}
@@ -65,13 +72,9 @@ public class MainUi : MonoBehaviour {
 	}
 	
 	IEnumerator OnFullEnergy(){
-		//StartCoroutine();
-		//Debug.Log("on full energ");
-		//energyBarTC.enabled = true;
+
 		energyBarTC.Play(true);
 		yield return new WaitForSeconds(2);
-		//Debug.Log("exit full energ");
-		//energyBarTC.Reset();
 		energyBarTC.enabled = false;
 	}
 	void OnHitATP(){
@@ -86,7 +89,9 @@ public class MainUi : MonoBehaviour {
 		energyPercentage = percentage;
 		energyBar.barSize = energyPercentage;
 	}
+
 	void OnRelease(){
+
 		if( energyPercentage >= 1.0){
 			currentEnergy = 0;
 			energyPercentage = currentEnergy/totalEnergy;
@@ -97,11 +102,17 @@ public class MainUi : MonoBehaviour {
 	}
 
 	void OnGameOver(){
-		Debug.Log("GameOver!!");
+		gameObject.GetComponent<GUICarrier>().OnGameOver(distanceLbl.text);
+	}
+
+	UILabel distanceLbl;
+	void OnUpdateDistance(float distance){
+		if(distanceLbl) // if game started
+			distanceLbl.text = "Distance: "+ Mathf.FloorToInt(distance).ToString();
 	}
 
 	// Use this for initialization
-	void Start () {
+	public void OnGameStart () {
 		GameObject go_shakeScreen = GameObject.Find("ShakeScreen");
 		shakeScreen   = go_shakeScreen.GetComponent<TweenColor>();
 		shakeScreenBg = go_shakeScreen.GetComponentInChildren<UIWidget>();
@@ -124,19 +135,8 @@ public class MainUi : MonoBehaviour {
 		currentEnergy = 0;
 		energyPercentage = currentEnergy/totalEnergy;
 		energyBar.barSize = energyPercentage;
-	}
 
-	// Update is called once per frame
-	void Update () {
-		// if blood emergency, shake the screen.
-//		if(bloodEmergency){
-//			shakeScreen.enabled = true;
-//			shakeScreenBg.enabled = true;
-//			//shakeScreen.GetComponent<TweenColor>().Reset();
-//		}
-//		else{
-//			//shakeScreen.GetComponent<TweenColor>().enabled = false;
-//			//shakeScreenBg.enabled = false;
-//		}
+		distanceLbl = GameObject.Find("DistanceLbl").GetComponent<UILabel>();
 	}
+	
 }

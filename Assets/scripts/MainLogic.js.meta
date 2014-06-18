@@ -2,7 +2,20 @@ fileFormatVersion: 2
 guid: 6b439c8e0372d734cb8427c7e7f03b48
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - ST_1_1_2: {fileID: 100000, guid: ace394a2a30ddf64c8a5ffd66ade80a1, type: 2}
+  - ST_1_2_2: {fileID: 100000, guid: d6e95fb6df315b84ab85bcb3c2654529, type: 2}
+  - ST_2_2_4: {fileID: 100002, guid: 2c16fa02b8296994d88641494eb86883, type: 2}
+  - ST_2_1_2: {fileID: 100008, guid: ba8424e317f815540afef7f452215d4f, type: 2}
+  - BT_1_3_30: {fileID: 100000, guid: f66600b54a35b8c4cb59aaafec137a4b, type: 2}
+  - BT_1_5_30: {fileID: 100000, guid: a3670d0e261b6d142a71cc18a796cf6b, type: 2}
+  - BT_2_6_30: {fileID: 100000, guid: ecb75c32f7d267641b862032f14f2da1, type: 2}
+  - REDCELL: {fileID: 100006, guid: 20f9ae798d8ff3f4db515ae661429b6a, type: 2}
+  - CAM: {fileID: 100002, guid: af72dd840e3070c4d87c368754ab93aa, type: 2}
+  - ATP: {instanceID: 0}
+  - VIRUS: {instanceID: 0}
+  - GUICarrier: {instanceID: 0}
+  - Spark: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

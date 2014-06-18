@@ -1,7 +1,6 @@
 ﻿#pragma strict
 //these are tubes and its prefabs
 
-
 var ST_1_1_2 : GameObject;
 var ST_1_2_2 : GameObject;
 var ST_2_2_4 : GameObject;
@@ -15,7 +14,8 @@ var CAM : GameObject;
 var ATP : GameObject;
 var VIRUS : GameObject;
 
-var GUI_ : GameObject;
+var GUICarrier : GameObject;
+//var mainui : MainUi ;
 
 var Spark : GameObject;
 
@@ -68,6 +68,10 @@ function Start(){
 		cell = vesselMap.AICells[i];
 		InstantiateCell(cell);
 	}
+	
+	// find gui object;
+	GUICarrier = GameObject.Find("GUICarrier");
+	//mainui = GUICarrier.GetComponent(MainUi);
 }
 
 function InstantiateCell(cell : Cell){
@@ -196,7 +200,9 @@ function FixedUpdate(){
 	vesselMap.cam.instance.transform.position = vesselMap.player.t_camPos;
 	vesselMap.cam.instance.transform.rotation = vesselMap.player.camRot;
 	
-	GUI_.SendMessage("increaseDistance", vesselMap.player.distance);
+	//GUI_.SendMessage("increaseDistance", vesselMap.player.distance);
+	//mainui.OnUpdateDistance(vesselMap.player.distance);
+	GUICarrier.SendMessage("OnUpdateDistance",vesselMap.player.distance);
 }
 
 public function AICompute(cells : Array, mainCell : Cell){

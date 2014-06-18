@@ -11,11 +11,14 @@ public class GUICarrier : MonoBehaviour {
 	public GameObject cellPanel;
 	public GameObject rankPanel;
 	public GameObject overPanel;
+	public GameObject gamePanel;
+	public GameObject background;
 
 	/* Start Panel */
 	GameObject startPanelStartBtn;
 	GameObject startPanelRankBtn;
-	
+
+	// Start Panel >> Player Panel
 	void OnStartPanelStartBtn(GameObject go, bool isPressed){
 		NGUITools.SetActive(playerPanel, true);
 		NGUITools.SetActive(startPanel , false);
@@ -31,7 +34,7 @@ public class GUICarrier : MonoBehaviour {
 	/* Rank Panel */
 	GameObject rankPanelBackBtn;
 	GameObject rankPanelTable;
-	Color rankPanelTableColor = Color.black;
+	public Color rankPanelTableColor;
 	public UIFont rankPanelTableFont;
 
 	void OnRankPanelBackBtn(GameObject go, bool isPressed){
@@ -41,36 +44,56 @@ public class GUICarrier : MonoBehaviour {
 
 	void OnReloadRankPanel(){
 		List<PlayerSystem.Player> players = playerSystem.players;
+		string curPlayerName = playerSystem.getCurPlayerName();
 
 		int i = 0;
+		Color color; 
+
+		GameObject container = rankPanelTable.transform.FindChild("Grid").gameObject;//GetComponentInChildren<UIGrid>();
+		//container.gameObject.AddComponent<UICenterOnChild>();
+		//container.arrangement = UIGrid.Arrangement.Vertical;
 		foreach( PlayerSystem.Player p in players){
 			i++;
-			
-			//UILabel no = (UILabel)NGUITools.AddChild(gameObject,label);
-			UILabel no = NGUITools.AddChild<UILabel>(rankPanelTable);
-			no.color = rankPanelTableColor;
-			no.font = rankPanelTableFont;
-			no.text = i.ToString();
+
+			if( curPlayerName != null && p.name.Equals(curPlayerName))
+				color = Color.yellow;
+			else
+				color = rankPanelTableColor;
+
+
+			UILabel no = NGUITools.AddChild<UILabel>(container);
+			no.color = color;
+			no.font =  rankPanelTableFont;
+			no.text = i.ToString()+"  "+p.name+"  "+p.distance.ToString();
 			no.MakePixelPerfect();
+			no.gameObject.AddComponent<UIDragPanelContents>();
+			BoxCollider bno = no.gameObject.AddComponent<BoxCollider>();
+			bno.size = no.transform.localScale;
 			
-			UILabel playername = NGUITools.AddChild<UILabel>(rankPanelTable);
-			playername.color = rankPanelTableColor;
-			playername.font = rankPanelTableFont;
-			playername.text = p.name;
-			playername.MakePixelPerfect();
-			
-			UILabel playerdist = NGUITools.AddChild<UILabel>(rankPanelTable);
-			playerdist.color = rankPanelTableColor;
-			playerdist.font = rankPanelTableFont;
-			playerdist.text = p.distance.ToString();
-			playerdist.MakePixelPerfect();
+//			UILabel playername = NGUITools.AddChild<UILabel>(rankPanelTable);
+//			playername.color = color;
+//			playername.font =  rankPanelTableFont;
+//			playername.text = p.name;
+//			playername.MakePixelPerfect();
+//			playername.gameObject.AddComponent<UIDragPanelContents>();
+//			playername.gameObject.AddComponent<BoxCollider>();
+//			
+//			UILabel playerdist = NGUITools.AddChild<UILabel>(rankPanelTable);
+//			playerdist.color = color;
+//			playerdist.font =  rankPanelTableFont;
+//			playerdist.text = p.distance.ToString();
+//			playerdist.MakePixelPerfect();
+//			playerdist.gameObject.AddComponent<UIDragPanelContents>();
+//			playerdist.gameObject.AddComponent<BoxCollider>();
 			
 		}
-		rankPanelTable.GetComponent<UITable>().Reposition();
+		container.GetComponent<UIGrid>().Reposition();
+		//rankPanelTable.GetComponent<UIGrid>().Reposition();
 	}
 
 	/* Player Panel */
 	GameObject playerPanelNextBtn;
+	GameObject playerPanelBackBtn;
 	UIPopupListAndInput playerPanelNameInput;
 	UILabel playerPanelInvalidNameLbl;
 
@@ -90,22 +113,53 @@ public class GUICarrier : MonoBehaviour {
 		NGUITools.SetActive(playerPanel , false);
 	}
 
+	void OnPlayerPanelBackBtn(GameObject go, bool isPress){
+		NGUITools.SetActive(startPanel,true);
+		NGUITools.SetActive(playerPanel,false);
+	}
+
+	/* Game Panel */
+	UILabel overPanelDistanceLbl;
+	public void OnGameOver(string distance){
+		NGUITools.SetActive(overPanel,true);
+		NGUITools.SetActive(gamePanel,false);
+		background.GetComponent<UISprite>().enabled = true;
+		overPanelDistanceLbl.text = distance;
+	}
+	
 	/* Cell Panel */
 	GameObject cellPanelStartBtn;
 	void OnCellPanelStartBtn(GameObject go, bool isPressed){
-		Application.LoadLevel("scene1");
+		//Application.LoadLevel("scene1");
+		NGUITools.SetActive(gamePanel,true);
+		NGUITools.SetActive(cellPanel,false);
+		gameObject.GetComponent<MainUi>().OnGameStart();
+
+		scriptCarrier.SendMessage("Start");
+		background.GetComponent<UISprite>().enabled = false;
+
+	}
+	void OnCellPanelBackBtn(GameObject go, bool isPressed){
+		NGUITools.SetActive(playerPanel,true);
+		NGUITools.SetActive(cellPanel,false);
 	}
 
 	/* Over Panel */
 	GameObject overPanelTryAgainBtn;
+	GameObject scriptCarrier;
 	void OnOverPanelTryAgainBtn(GameObject go, bool isPressed){
-		Application.LoadLevel("scene1");
+		//Application.LoadLevel("scene1");
+		//scriptCarrier.SendMessage("Start");
+		//NGUITools.SetActive(gamePanel,true);
+		NGUITools.SetActive(overPanel,false);
+		OnCellPanelStartBtn(overPanel,true);
 	}
 
 	// Use this for initialization
 	void Start () {
 
 		playerSystem = GameObject.Find("PlayerSystem").GetComponent<PlayerSystem>();
+		scriptCarrier = GameObject.Find ("ScriptCarrier");
 		
 		startPanelStartBtn = startPanel.transform.FindChild("StartBtn").gameObject;
 		startPanelRankBtn  = startPanel.transform.FindChild("StartTable/RankBtn").gameObject; 	
@@ -117,15 +171,21 @@ public class GUICarrier : MonoBehaviour {
 		rankPanelTable = rankPanel.transform.FindChild("Table").gameObject;
 
 		playerPanelNextBtn = playerPanel.transform.FindChild("NextBtn").gameObject;
+		playerPanelBackBtn = playerPanel.transform.FindChild("BackBtn").gameObject;
 		playerPanelNameInput = playerPanel.transform.FindChild("NameInput").gameObject.GetComponent<UIPopupListAndInput>();
 		playerPanelInvalidNameLbl = playerPanel.transform.FindChild("InvalidName").gameObject.GetComponent<UILabel>();
 		playerPanelInvalidNameLbl.enabled = false;
 		UIEventListener.Get (playerPanelNextBtn).onPress = OnPlayerPanelNextBtn;
+		UIEventListener.Get (playerPanelBackBtn).onPress = OnPlayerPanelBackBtn;
 	
 		cellPanelStartBtn = cellPanel.transform.FindChild("StartBtn").gameObject;
+		GameObject cellPanelBackBtn = cellPanel.transform.FindChild("BackBtn").gameObject;
 		UIEventListener.Get(cellPanelStartBtn).onPress = OnCellPanelStartBtn;
+		UIEventListener.Get (cellPanelBackBtn).onPress = OnCellPanelBackBtn;
 	
 		overPanelTryAgainBtn = overPanel.transform.FindChild("TryAgainBtn").gameObject;
 		UIEventListener.Get(overPanelTryAgainBtn).onPress = OnOverPanelTryAgainBtn;
+		overPanelDistanceLbl = overPanel.transform.FindChild("DistanceLbl").gameObject.GetComponent<UILabel>();
 	}
+
 }

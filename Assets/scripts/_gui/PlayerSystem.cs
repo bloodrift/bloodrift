@@ -29,9 +29,12 @@ public class PlayerSystem : MonoBehaviour{
 		}
 	}
 
-	public bool isLoadPlayers = false;
+	private bool isLoadPlayers = false;
+	private bool isPlayersDirty = false;
+
 	public List<Player> players = new List<Player>();
 	public Player curPlayer;
+
 
 	// called when user close the game program.
 	// save all information back to computer system.
@@ -39,10 +42,9 @@ public class PlayerSystem : MonoBehaviour{
 		BinaryFormatter b = new BinaryFormatter();
 		MemoryStream m = new MemoryStream();
 		b.Serialize(m, players);
-
-		//Debug.Log( m.ToString() );
-
 		PlayerPrefs.SetString("players",Convert.ToBase64String(m.GetBuffer()));
+
+		isPlayersDirty = false;
 	}
 
 	// called when the program opened.
@@ -53,27 +55,55 @@ public class PlayerSystem : MonoBehaviour{
 			Debug.LogError("PlayerSystem: Empty player information!");
 			return;
 		}
-
 		BinaryFormatter b = new BinaryFormatter();
 		MemoryStream m = new MemoryStream(Convert.FromBase64String(d));
 		players = (List<Player>)b.Deserialize(m);
+
+		isLoadPlayers = true;  // players are loaded
+		isPlayersDirty = false; // players are the newest now
 	}
-	
-	void newPlayer(string name){
-		if(! isLoadPlayers ){
-			loadPlayers();
-		}
-		players.Add(Player.newPlayer(name,0));
-	}
+
+	// a player named <name> play game now.
+	// we have already checked there's no stored player named <name>
+//	void newPlayer(string name){
+//		if(! isLoadPlayers ){
+//			loadPlayers();
+//		}
+//		players.Add(Player.newPlayer(name,0));
+//		isPlayersDirty = true; // players are dirty now;
+//	}
 
 	// find the name from playerlist, or create new player
 	public void OnUserEnterName(String name){
+
+		// is there any player who names <name> ?
+		foreach( Player p in players){
+			if( p.name.Equals(name) ){
+				curPlayer = p;
+				return;
+			}
+		}
+		// add a new player.
 		curPlayer = Player.newPlayer(name,0);
+		players.Add(curPlayer);
+		isPlayersDirty = true;
 	}
 
 	// save current player information, update rank, 
-	public void OnGameOver(){
+	public void OnGameOver(int distance){
+		if( curPlayer.distance < distance){
+			curPlayer.distance = distance;
+			isPlayersDirty = true;
 
+			// update sort;
+			players.Sort();
+		}
+	}
+
+	// when user exits game, should store players information back disk?
+	void OnDestroy(){
+		if(isPlayersDirty)
+			savePlayers();
 	}
 
 	public List<string> getPlayersName(){
@@ -84,8 +114,11 @@ public class PlayerSystem : MonoBehaviour{
 		return names;
 	}
 
-	void OnDestroy(){
-		savePlayers();
+	public string getCurPlayerName(){
+		if(curPlayer != null){
+			return curPlayer.name;
+		}
+		return null;
 	}
 
 	void initializePlayerSystemForTesting(){
@@ -107,8 +140,6 @@ public class PlayerSystem : MonoBehaviour{
 	void Awake(){
 		
 		DontDestroyOnLoad(gameObject); 
-		//DontDestroyOnLoad(this); 
-
 		//savePlayer();
 		if( ! isLoadPlayers ){
 			players.Clear();
