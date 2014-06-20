@@ -111,6 +111,7 @@ public class GUICarrier : MonoBehaviour {
 		
 		NGUITools.SetActive(cellPanel, true);
 		NGUITools.SetActive(playerPanel , false);
+		OnReloadCellPanel();
 	}
 
 	void OnPlayerPanelBackBtn(GameObject go, bool isPress){
@@ -129,7 +130,55 @@ public class GUICarrier : MonoBehaviour {
 	
 	/* Cell Panel */
 	GameObject cellPanelStartBtn;
-	void OnCellPanelStartBtn(GameObject go, bool isPressed){
+
+	GameObject cellPanelToy2;
+	GameObject cellPanelToy3;
+
+	const int secondThreshold = 20;
+	const int thirdThreshold  = 50;
+	void OnReloadCellPanel(){
+		//cellPanelToy2.SetActive(false);
+		if( playerSystem.curPlayer == null){
+			Debug.LogError("OnReloadCellPanel: didn't find current player");
+			return;
+		}
+
+		int curPlayerDist = playerSystem.curPlayer.distance;
+
+		if( curPlayerDist >= secondThreshold){
+			cellPanelToy2.transform.FindChild("Lock").gameObject.SetActive(false);
+			cellPanelToy2.transform.FindChild("Cell").gameObject.SetActive(true);
+			cellPanelToy2.GetComponent<UIButton>().isEnabled = true;
+		}
+		else{
+			cellPanelToy2.transform.FindChild("Lock").gameObject.SetActive(true);
+			cellPanelToy2.transform.FindChild("Cell").gameObject.SetActive(false);
+			cellPanelToy2.GetComponent<UIButton>().isEnabled = false;
+		}
+
+		if( curPlayerDist >= thirdThreshold){
+			cellPanelToy3.transform.FindChild("Lock").gameObject.SetActive(false);
+			cellPanelToy3.transform.FindChild("Cell").gameObject.SetActive(true);
+			cellPanelToy3.GetComponent<UIButton>().isEnabled = true;
+		}
+		else{
+			cellPanelToy3.transform.FindChild("Lock").gameObject.SetActive(true);
+			cellPanelToy3.transform.FindChild("Cell").gameObject.SetActive(false);
+			cellPanelToy3.GetComponent<UIButton>().isEnabled = false;
+		}
+
+	}
+	void OnCellPanelToy1(GameObject go, bool isPressed){
+		OnCellPanelStart(1);
+	}
+	void OnCellPanelToy2(GameObject go, bool isPressed){
+		OnCellPanelStart(2);
+	}
+	void OnCellPanelToy3(GameObject go, bool isPressed){
+		OnCellPanelStart(3);
+	}
+
+	void OnCellPanelStart(int toynumber){
 		//Application.LoadLevel("scene1");
 		NGUITools.SetActive(gamePanel,true);
 		NGUITools.SetActive(cellPanel,false);
@@ -152,7 +201,9 @@ public class GUICarrier : MonoBehaviour {
 		//scriptCarrier.SendMessage("Start");
 		//NGUITools.SetActive(gamePanel,true);
 		NGUITools.SetActive(overPanel,false);
-		OnCellPanelStartBtn(overPanel,true);
+		NGUITools.SetActive(cellPanel,true);
+		OnReloadCellPanel();
+		//OnCellPanelStart(overPanel,true);
 	}
 
 	// Use this for initialization
@@ -178,14 +229,23 @@ public class GUICarrier : MonoBehaviour {
 		UIEventListener.Get (playerPanelNextBtn).onPress = OnPlayerPanelNextBtn;
 		UIEventListener.Get (playerPanelBackBtn).onPress = OnPlayerPanelBackBtn;
 	
-		cellPanelStartBtn = cellPanel.transform.FindChild("StartBtn").gameObject;
+		//cellPanelStartBtn = cellPanel.transform.FindChild("StartBtn").gameObject;
 		GameObject cellPanelBackBtn = cellPanel.transform.FindChild("BackBtn").gameObject;
-		UIEventListener.Get(cellPanelStartBtn).onPress = OnCellPanelStartBtn;
-		UIEventListener.Get (cellPanelBackBtn).onPress = OnCellPanelBackBtn;
-	
+		//UIEventListener.Get(cellPanelStartBtn).onPress = OnCellPanelStartBtn;
+		UIEventListener.Get(cellPanelBackBtn).onPress  = OnCellPanelBackBtn;
+
+		GameObject cellPanelToy1 = cellPanel.transform.FindChild("Toy1").gameObject;
+		cellPanelToy2 = cellPanel.transform.FindChild("Toy2").gameObject;
+		cellPanelToy3 = cellPanel.transform.FindChild("Toy3").gameObject;
+		UIEventListener.Get (cellPanelToy1).onPress = OnCellPanelToy1;
+		UIEventListener.Get (cellPanelToy2).onPress = OnCellPanelToy2;
+		UIEventListener.Get (cellPanelToy3).onPress = OnCellPanelToy3;
+
+
 		overPanelTryAgainBtn = overPanel.transform.FindChild("TryAgainBtn").gameObject;
 		UIEventListener.Get(overPanelTryAgainBtn).onPress = OnOverPanelTryAgainBtn;
 		overPanelDistanceLbl = overPanel.transform.FindChild("DistanceLbl").gameObject.GetComponent<UILabel>();
+	
 	}
 
 }
