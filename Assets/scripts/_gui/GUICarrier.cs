@@ -135,7 +135,7 @@ public class GUICarrier : MonoBehaviour {
 		NGUITools.SetActive(cellPanel,false);
 		gameObject.GetComponent<MainUi>().OnGameStart();
 
-		scriptCarrier.SendMessage("Start");
+		scriptCarrier.SendMessage("StartGame");
 		background.GetComponent<UISprite>().enabled = false;
 
 	}

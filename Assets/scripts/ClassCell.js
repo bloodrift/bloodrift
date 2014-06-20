@@ -38,6 +38,8 @@ public class Cell{
 	public var t_camPos : Vector3;
 	public var t_camRot : Quaternion;
 
+
+
 	public function Cell(type : int, rd : float, cv : int, map : Array, vesselOff : int){
 		cellType = type;
 		radius = rd;
@@ -46,6 +48,8 @@ public class Cell{
 		var vess : Vessel = map[curVess - vesselOff];
 		posOff = Vector3(0, 0, 0);
 		UpdatePos(vess);
+		life = 100;
+		energy = 0;
 	}
 	
 	public function rushSpeed() : float{
@@ -76,17 +80,27 @@ public class Cell{
 		else drag = -posSpeed.normalized * shiftDragForce();
 		var shiftRotForce : Vector3 = Vector3.zero;
 		if (vess.vessType%2 != 0)
-			shiftRotForce = (0.5 + speed / 28.0) * (Quaternion.AngleAxis(-rotateAngle, Vector3(0, 0, 1)) * Vector3(0, Global.gravity * Global.maxShiftForce, 0));
+			shiftRotForce = (2 * Global.shiftDragForce + speed / Global.rushSpeed* (Global.maxShiftForce - Global.shiftDragForce)) * (Quaternion.AngleAxis(-rotateAngle, Vector3(0, 0, 1)) * Vector3(0, 1, 0));
 		posSpeed += (drag + posForce + shiftRotForce) * 0.5 * time;
-		
+
 		selfRot = Quaternion.AngleAxis(posOff.magnitude * 270, Vector3(posOff.y, -posOff.x, 0));
 		posOff += posSpeed * time;
-		
+	
 		var cellRadius = getRadiusInDir(vess.GetUpDir(centPos, RealRotate()));
-		if(posOff.magnitude + cellRadius> vess.radius){
-			posOff = (vess.radius - cellRadius) * posOff.normalized;
-			posSpeed = -Global.BoundFactor * posOff.normalized; 
+		if(EdgeDistance(vess) < 0){
+			posOff = (vess.GetRadius(centPos) - cellRadius) * posOff.normalized;
+			var upPos = posOff.normalized;
+			if(Vector3.Dot(posSpeed, upPos) > 0){
+				life -= 1;	
+				var stridePos = 2 * upPos * Vector3.Dot(posSpeed, upPos);
+				posSpeed -= (0.9 * stridePos + Global.boundFactor * upPos) ; 
+			}
 		}
+	}
+	
+	public function EdgeDistance(vess : Vessel) : float{
+		var cellRadius = getRadiusInDir(vess.GetUpDir(centPos, RealRotate()));
+		return vess.GetRadius(centPos) - (posOff.magnitude + cellRadius);
 	}
 	
 	public function RealRotate() : float{

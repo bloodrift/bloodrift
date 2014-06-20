@@ -25,7 +25,7 @@ public class MainUi : MonoBehaviour {
 	public float hemoglobinReward = 10;
 	public float bloodWarningThresh = 0.1f;
 
-	public float atpReward = 10;
+	public float atpReward = 5;
 
 	void OnShakeScreen(bool isShake){
 		//if(isShake)
@@ -42,8 +42,9 @@ public class MainUi : MonoBehaviour {
 
 	}
 	// decrease currentBlood
-	void OnHitVirus(){
-		currentBlood -= virusPunish;
+
+	void OnHitVirus(int blood){
+		currentBlood = blood;
 		if(currentBlood <= 0){
 			OnGameOver ();
 			return;
@@ -59,8 +60,8 @@ public class MainUi : MonoBehaviour {
 		bloodBar.barSize = bloodPercentage;
 	}
 
-	void OnHitHemoglobin(){
-		currentBlood += hemoglobinReward;
+	void OnHitHemoglobin(int blood){
+		currentBlood = blood;
 		float percentage = currentBlood / totalBlood;
 		// first time exiting from emergent situation.
 		if(percentage > bloodWarningThresh &&
@@ -77,12 +78,12 @@ public class MainUi : MonoBehaviour {
 		yield return new WaitForSeconds(2);
 		energyBarTC.enabled = false;
 	}
-	void OnHitATP(){
-		currentEnergy += atpReward;
+
+	void OnHitATP(float energy){
+		currentEnergy = energy;
 		float percentage = currentEnergy / totalEnergy;
 		// first time energy is filled
 		if(percentage >= 1.0 && energyPercentage < 1.0){
-
 			StartCoroutine(OnFullEnergy());
 		}
 

@@ -22,6 +22,7 @@ public class Map{
 	private var ATPoff : float;
 	
 	private var VIRUSnum : int;
+	private var HEMOnum : int;
 	
 	public function Map(){
 		map = new Array();
@@ -40,9 +41,11 @@ public class Map{
 		AICells = new Array();
 	}
 	
-	public function Move(cell : Cell, time : float) : boolean{
-		if(cell.curVess - vesselOff < Global.mainVessel - 1) 
-			return false;
+	public function Move(cell : Cell, time : float, index : int){
+		if(cell.curVess - vesselOff < Global.mainVessel - 1){
+			Destroy(cell.instance);
+			AICells.RemoveAt(index);
+		}
 		var vess : Vessel = map[cell.curVess - vesselOff];
 		//beneth is a unclear model, we can modify it later
 		var rots = cell.RealRotate() * Mathf.PI / 180.0;
@@ -66,34 +69,30 @@ public class Map{
 			}
 		}
 		
-		cell.distance += nextPos - cell.centPos;
-		if(cell == player)
+		if(Global.gameStart){
+			cell.distance += nextPos - cell.centPos;
+			cell.Shift(vess, time);
+		}
+		if(cell == player){
 			cell.speed = Mathf.Log(cell.distance + 8);
-
+		}
+			
 		cell.centPos = nextPos;
-		
-		//calculate rotate force
-	//	if(cell == player)
-		cell.Shift(vess, time);
-
 		// go to the next vessel--------------------------
-		
+
 		if (cell.centPos > vess.vessLength){
 					//destroy the vessels
 			if(cell == player){
 				AbandonVessel();
-				RandomGenerateVessel();	
-				//add new AICell
-				var newcell : Cell = AddAICell(Global.typeRedCell, 6 + vesselOff);
-				newcell.speed = cell.speed / 2;
-				newCell++;
-
+				RandomGenerateVessel();
+				
+				RandomGenerateAICell((cell.cellType + 1) % 3,cell.speed / 2);
+				RandomGenerateAICell((cell.cellType + 2) % 3,cell.speed / 2);
 			}
 			vess = SwitchToNextVessel(cell, vess);
 		}
 		//-----------------------------------
 		cell.UpdatePos(vess);	
-		return true;
 	}
 
 	public function SetShiftForce(cell : Cell, sf : Vector3){
@@ -129,6 +128,14 @@ public class Map{
 			x = 0;
 		return Mathf.Floor(x * num);
 	}
+	
+	private function RandomGenerateAICell(cellType : int, speed : float){
+		//add new AICell
+		var newcell : Cell = AddAICell(cellType, 6 + vesselOff);
+		newcell.speed = speed;
+		newCell++;
+	}
+	
 	
 	public function RandomGenerateVessel(){
 		var vess : Vessel;
@@ -171,6 +178,7 @@ public class Map{
 		ATPcentPos -= vess.vessLength;
 		
 		if(VIRUSnum >= 0){
+			
 			var vcp = Random.value * (vess.vessLength - Global.VIRUSradius);
 			var vrot = 360 * Random.value;
 			var voff = Random.value/2 + 0.5;
@@ -178,6 +186,15 @@ public class Map{
 			VIRUSnum = -1;
 		}
 		else VIRUSnum = 1;
+		
+		if(HEMOnum >= 0){
+			var hcp = Random.value * (vess.vessLength - Global.HEMOradius);
+			var hrot = 360 * Random.value;
+			var hoff = Random.value/2 + 0.5;
+			vess.AddItem(Global.typeHEMO, Global.HEMOradius, hcp, hrot, hoff);
+			HEMOnum = -5;
+		}
+		else HEMOnum += 1;
 	}
 	
 	public function ItemHit(cell : Cell){
@@ -199,6 +216,12 @@ public class Map{
 		switch (cellType){
 			case Global.typeRedCell :
 				cell = new Cell(Global.typeRedCell, Global.RedCellRadius, curVess, map, vesselOff);
+				break;
+			case Global.typeWhiteCell :
+				cell = new Cell(Global.typeWhiteCell, Global.WhiteCellRadius, curVess, map, vesselOff);
+				break;
+			case Global.typeTriangleCell :
+				cell = new Cell(Global.typeTriangleCell, Global.TriangleCellRadius, curVess, map, vesselOff);
 				break;
 		}
 		//random a position not collider with other cells

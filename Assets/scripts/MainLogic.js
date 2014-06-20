@@ -10,27 +10,37 @@ var BT_1_5_30 : GameObject;
 var BT_2_6_30 : GameObject;
 
 var REDCELL : GameObject;
+var WHITECELL : GameObject;
+var TRIANGLECELL : GameObject;
 var CAM : GameObject;
 var ATP : GameObject;
 var VIRUS : GameObject;
+var HEMO : GameObject;
 
 var GUICarrier : GameObject;
 //var mainui : MainUi ;
 
 var Spark : GameObject;
 
-public class Global{
-	static public var gameStart : boolean = false;
+static public class Global{
+	public var gameStart : boolean = false;
 	static public var mainVessel : int = 2;
 	static public var maxVessel : int = 10;
 
 	static public var rushSpeed : float = 15;
 	static public var maxShiftSpeed : float = 3;
 	static public var maxShiftForce : float = 12;
+	static public var shiftDragForce : float = 3;
 	static public var gravity : float = 0.6;
 	
 	static public var typeRedCell : int = 0;
 	static public var RedCellRadius : float = 0.15;
+	
+	static public var typeWhiteCell : int = 1;
+	static public var WhiteCellRadius : float = 0.12;
+	
+	static public var typeTriangleCell : int = 2;
+	static public var TriangleCellRadius : float = 0.15;
 	
 	static public var typeATP : int = 0;
 	static public var ATPgap : float = 0.5;
@@ -39,8 +49,11 @@ public class Global{
 	static public var typeVIRUS : int = 1;
 	static public var VIRUSradius : float = 0.15;
 	
-	static public var BoundFactor : float = 1.5;
-	static public var visibleRange : float = 10;
+	static public var typeHEMO : int = 2;
+	static public var HEMOradius : float = 0.25;
+	
+	static public var boundFactor : float = 0.2;
+	static public var visibleRange : float = 5;
 	static public var AIActPerFrame : int = 5;
 }
 
@@ -53,6 +66,10 @@ static function getCamPos(){
 
 static function getScore(){
 	return vesselMap.player.energy;
+}
+
+function StartGame(){
+		Global.gameStart = true;
 }
 
 function gameOver(distance : float){
@@ -71,13 +88,20 @@ function Start(){
 	
 	// find gui object;
 	GUICarrier = GameObject.Find("GUICarrier");
+
 	//mainui = GUICarrier.GetComponent(MainUi);
 }
 
 function InstantiateCell(cell : Cell){
 	switch (cell.cellType){
-		case Global.typeRedCell:
+		case Global.typeRedCell :
 			cell.instance = Instantiate(REDCELL, cell.position, cell.rotation);
+			break;
+		case Global.typeWhiteCell :
+			cell.instance = Instantiate(WHITECELL, cell.position, cell.rotation);
+			break;
+		case Global.typeTriangleCell :
+			cell.instance = Instantiate(TRIANGLECELL, cell.position, cell.rotation);
 			break;
 		default:
 			break;
@@ -119,6 +143,9 @@ function InstantiateVessel(vess : Vessel){
 		if(item.itemType == Global.typeVIRUS){ 
 			item.instance = Instantiate(VIRUS, item.position, item.rotation);
 		}
+		if(item.itemType == Global.typeHEMO){ 
+			item.instance = Instantiate(HEMO, item.position, item.rotation);
+		}
 	}
 }
 
@@ -131,11 +158,10 @@ static var frameCount : int = Global.AIActPerFrame - 1;
 function Update(){
 	frameCount = (frameCount + 1) % Global.AIActPerFrame;
 	if(frameCount == 0)
-		AICompute(vesselMap.AICells, vesselMap.player);
-		
-	
-	
+		AICompute(vesselMap.AICells, vesselMap.player, vesselMap.map, vesselMap.vesselOff);	
 }
+
+
 
 function FixedUpdate(){
 	//add new vessels
@@ -180,14 +206,11 @@ function FixedUpdate(){
 	}	
 	vesselMap.SetShiftForce(vesselMap.player, Vector3(lrSpeed, udSpeed, 0));
 	
-	vesselMap.Move(vesselMap.player, Time.deltaTime);
+	vesselMap.Move(vesselMap.player, Time.deltaTime, 0);
 	var cell : Cell;
 	for (var i = vesselMap.AICells.length - 1; i >=0 ; --i){
 		cell = vesselMap.AICells[i];
-		if(!vesselMap.Move(cell, Time.deltaTime)){
-			Destroy(cell.instance);
-			vesselMap.AICells.remove(i);
-		}
+		vesselMap.Move(cell, Time.deltaTime, i);
 	}
 	
 /*	if(Input.GetKeyDown(KeyCode.C)){
@@ -202,32 +225,74 @@ function FixedUpdate(){
 	
 	//GUI_.SendMessage("increaseDistance", vesselMap.player.distance);
 	//mainui.OnUpdateDistance(vesselMap.player.distance);
-	GUICarrier.SendMessage("OnUpdateDistance",vesselMap.player.distance);
+	if(Global.gameStart){
+		GUICarrier.SendMessage("OnUpdateDistance", vesselMap.player.distance);
+		GUICarrier.SendMessage("OnHitVirus", vesselMap.player.life);
+	}
 }
 
-public function AICompute(cells : Array, mainCell : Cell){
+public function AICompute(cells : Array, mainCell : Cell, map : Array, vesselOff : int){
 	var totalPosOff : Vector3 = mainCell.posOff;
 	var aimPosOff : Vector3;
 	var cell : Cell;
+	var vess : Vessel;
 	var otherCell : Cell;
+	var dis : float;
+	var edgeDis : float;
 	var count : int;
+	var posOff : Vector3;
 	for(var i = 0; i < cells.length; ++i){
 		cell = cells[i];
 		totalPosOff = Vector3.zero;
 		count = 0;
+		vess = map[cell.curVess - vesselOff];
+		// check for other cells
 		for(var j = 0; j < cells.length ; ++j){
 			otherCell = cells[j];
-		//	if(Vector3.Distance(cell.position, otherCell.position) < Global.visibleRange){
-				totalPosOff += otherCell.posOff;
+			dis = Mathf.Max(Vector3.Distance(cell.position, otherCell.position), 0.1);
+			if( dis < Global.visibleRange){
+				totalPosOff += (cell.posOff - otherCell.posOff).normalized / (1 * dis);
 				count ++;
-		//	}
+				if(cell.OnCollision(otherCell)){
+					posOff = (otherCell.posOff - cell.posOff).normalized;
+					cell.posSpeed += -2 * posOff.normalized / 2; 
+					otherCell.posSpeed += 2 * posOff.normalized / 2;
+				}
+			}
 		}
-		if(Vector3.Distance(cell.position, mainCell.position) < Global.visibleRange){
-			totalPosOff += mainCell.posOff;
-			count ++;
+		dis = Mathf.Max(Vector3.Distance(cell.position, mainCell.position), 0.1);
+		if(dis < Global.visibleRange){
+			var playerPosOff = (cell.posOff - mainCell.posOff).normalized / (5 * dis);
+			if(cell.OnCollision(mainCell)){
+				posOff = (mainCell.posOff - cell.posOff).normalized;
+		//		cell.posSpeed += -1.5 * (mainCell.posSpeed.magnitude + 1)/ Global.maxShiftSpeed * posOff.normalized / 2; 
+		//		mainCell.posSpeed += 1.5 * (cell.posSpeed.magnitude + 1)/ Global.maxShiftSpeed * posOff.normalized / 2;
+				cell.posSpeed += -2 * posOff.normalized / 2; 
+				mainCell.posSpeed += 2 * posOff.normalized / 2;
+			}
 		}
-		aimPosOff = -totalPosOff/count;
-		cell.posForce = Global.maxShiftForce * (aimPosOff - cell.posOff);
+	
+		//check for bound
+		var curRadius = vess.GetRadius(cell.centPos);
+		dis = Mathf.Max(cell.EdgeDistance(vess) / (curRadius * curRadius), 0.12);
+		if(dis < 0.65 * curRadius){
+			var edgePosOff : Vector3 = - cell.posOff / (100 *  (dis - 0.1) * (dis - 0.1));
+		}
+		//final compute
+		if (vess.vessType%2 != 0)
+			var shiftRotForce : Vector3 = (2 * Global.shiftDragForce + cell.speed / Global.rushSpeed* (Global.maxShiftForce - Global.shiftDragForce)) * (Quaternion.AngleAxis(-cell.rotateAngle, Vector3(0, 0, 1)) * Vector3(0, 1, 0));
+			
+		if( vess.vessType == 6)
+			var midForce = -(cell.posOff - cell.posOff.normalized);	
+		
+	//	totalPosOff = (totalPosOff / count) + edgePosOff - shiftRotForce / Global.maxShiftForce;
+	//	totalPosOff = (totalPosOff / count) - shiftRotForce / Global.maxShiftForce;
+	//	totalPosOff = - shiftRotForce / Global.maxShiftForce;
+	//	totalPosOff = edgePosOff - shiftRotForce / Global.maxShiftForce;
+		totalPosOff = edgePosOff + midForce + (totalPosOff / count) + playerPosOff;
+		if(totalPosOff.sqrMagnitude > 1)
+			totalPosOff = totalPosOff.normalized;
+		cell.posForce = Global.maxShiftForce * totalPosOff;
 	}
 }
 
