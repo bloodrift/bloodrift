@@ -13,6 +13,7 @@ public class GUICarrier : MonoBehaviour {
 	public GameObject overPanel;
 	public GameObject gamePanel;
 	public GameObject background;
+	public GameObject UILight;
 
 	/* Start Panel */
 	GameObject startPanelStartBtn;
@@ -189,6 +190,8 @@ public class GUICarrier : MonoBehaviour {
 		scriptCarrier.SendMessage("StartGame", toynumber);
 		background.GetComponent<UISprite>().enabled = false;
 
+		UILight.light.enabled = false;
+
 	}
 	void OnCellPanelBackBtn(GameObject go, bool isPressed){
 		NGUITools.SetActive(playerPanel,true);
@@ -205,6 +208,7 @@ public class GUICarrier : MonoBehaviour {
 		NGUITools.SetActive(overPanel,false);
 		NGUITools.SetActive(cellPanel,true);
 		OnReloadCellPanel();
+		UILight.light.enabled = true;
 		//OnCellPanelStart(overPanel,true);
 	}
 
@@ -248,6 +252,8 @@ public class GUICarrier : MonoBehaviour {
 		UIEventListener.Get(overPanelTryAgainBtn).onPress = OnOverPanelTryAgainBtn;
 		overPanelDistanceLbl = overPanel.transform.FindChild("DistanceLbl").gameObject.GetComponent<UILabel>();
 	
+		UILight = GameObject.Find("UILight");
+
 	}
 
 }

@@ -109,7 +109,7 @@ public class MainUi : MonoBehaviour {
 	UILabel distanceLbl;
 	void OnUpdateDistance(float distance){
 		if(distanceLbl) // if game started
-			distanceLbl.text = "Distance: "+ Mathf.FloorToInt(distance).ToString();
+			distanceLbl.text = Mathf.FloorToInt(distance).ToString();
 	}
 
 	// Use this for initialization
