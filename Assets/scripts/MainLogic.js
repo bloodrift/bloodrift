@@ -13,17 +13,21 @@ var REDCELL : GameObject;
 var WHITECELL : GameObject;
 var TRIANGLECELL : GameObject;
 var CAM : GameObject;
+
 var ATP : GameObject;
 var VIRUS : GameObject;
 var HEMO : GameObject;
+var BUBBLE : GameObject;
+
+var COLLOSION :GameObject;
 
 var GUICarrier : GameObject;
 //var mainui : MainUi ;
 
-var Spark : GameObject;
-
 static public class Global{
 	public var gameStart : boolean = false;
+	public var gameOver : boolean = false;
+	
 	static public var mainVessel : int = 2;
 	static public var maxVessel : int = 10;
 
@@ -41,6 +45,9 @@ static public class Global{
 	
 	static public var typeTriangleCell : int = 2;
 	static public var TriangleCellRadius : float = 0.15;
+	
+	static public var typeBubble : int = 3;
+	static public var BubbleRadius : float = 0.1; 
 	
 	static public var typeATP : int = 0;
 	static public var ATPgap : float = 0.5;
@@ -68,8 +75,21 @@ static function getScore(){
 	return vesselMap.player.energy;
 }
 
-function StartGame(){
-		Global.gameStart = true;
+function StartGame(playerType : int){
+	Global.gameStart = true;
+	Global.gameOver = false;
+	switch (playerType){
+		case Global.typeRedCell :
+			vesselMap.player = new Cell(Global.typeRedCell, Global.RedCellRadius, vesselMap.player.curVess, vesselMap.map, vesselMap.vesselOff);
+			break;
+		case Global.typeWhiteCell :
+			vesselMap.player = new Cell(Global.typeWhiteCell, Global.WhiteCellRadius, vesselMap.player.curVess, vesselMap.map, vesselMap.vesselOff);
+			break;
+		case Global.typeTriangleCell :
+			vesselMap.player = new Cell(Global.typeTriangleCell, Global.TriangleCellRadius, vesselMap.player.curVess, vesselMap.map, vesselMap.vesselOff);
+			break;	
+	}
+	InstantiateCell(vesselMap.player);
 }
 
 function gameOver(distance : float){
@@ -80,12 +100,12 @@ function Start(){
 	
 	var cell : Cell = vesselMap.cam;
 	cell.instance = CAM;
-	InstantiateCell(vesselMap.player);
+//	InstantiateCell(vesselMap.player);
 	for (var i = 0 ; i < vesselMap.AICells.length; i++){
 		cell = vesselMap.AICells[i];
 		InstantiateCell(cell);
 	}
-	
+	vesselMap.collisionEffect = Instantiate(COLLOSION, Vector3.zero, Quaternion(0, 0, 0, 1));
 	// find gui object;
 	GUICarrier = GameObject.Find("GUICarrier");
 
@@ -102,6 +122,9 @@ function InstantiateCell(cell : Cell){
 			break;
 		case Global.typeTriangleCell :
 			cell.instance = Instantiate(TRIANGLECELL, cell.position, cell.rotation);
+			break;
+		case Global.typeBubble :
+			cell.instance = Instantiate(BUBBLE, cell.position, cell.rotation);
 			break;
 		default:
 			break;
@@ -220,14 +243,19 @@ function FixedUpdate(){
 	}*/
 	
 	vesselMap.ItemHit(vesselMap.player);
-	vesselMap.cam.instance.transform.position = vesselMap.player.t_camPos;
+	vesselMap.cam.instance.transform.position = vesselMap.player.camPos;
 	vesselMap.cam.instance.transform.rotation = vesselMap.player.camRot;
 	
 	//GUI_.SendMessage("increaseDistance", vesselMap.player.distance);
 	//mainui.OnUpdateDistance(vesselMap.player.distance);
-	if(Global.gameStart){
+	
+	if(Global.gameStart && !Global.gameOver){
 		GUICarrier.SendMessage("OnUpdateDistance", vesselMap.player.distance);
 		GUICarrier.SendMessage("OnHitVirus", vesselMap.player.life);
+	}
+	if(vesselMap.player.life <= 0){
+		Global.gameOver = true;
+		Destroy(vesselMap.player.instance);
 	}
 }
 

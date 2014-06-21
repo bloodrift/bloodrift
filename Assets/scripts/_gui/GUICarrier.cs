@@ -169,13 +169,15 @@ public class GUICarrier : MonoBehaviour {
 
 	}
 	void OnCellPanelToy1(GameObject go, bool isPressed){
-		OnCellPanelStart(1);
+		OnCellPanelStart(0);
+
 	}
 	void OnCellPanelToy2(GameObject go, bool isPressed){
-		OnCellPanelStart(2);
+		OnCellPanelStart(1);
+	
 	}
 	void OnCellPanelToy3(GameObject go, bool isPressed){
-		OnCellPanelStart(3);
+		OnCellPanelStart(2);
 	}
 
 	void OnCellPanelStart(int toynumber){
@@ -184,7 +186,7 @@ public class GUICarrier : MonoBehaviour {
 		NGUITools.SetActive(cellPanel,false);
 		gameObject.GetComponent<MainUi>().OnGameStart();
 
-		scriptCarrier.SendMessage("StartGame");
+		scriptCarrier.SendMessage("StartGame", toynumber);
 		background.GetComponent<UISprite>().enabled = false;
 
 	}

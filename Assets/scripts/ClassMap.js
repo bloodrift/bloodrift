@@ -6,6 +6,7 @@ public class Map{
 	public var lastRotation : Quaternion;
 	public var player : Cell;	
 	public var cam : Cell;
+	public var collisionEffect : GameObject;
 	public var vesselOff : int;
 	public var newVessel : int;
 	public var newCell : int;
@@ -71,10 +72,14 @@ public class Map{
 		
 		if(Global.gameStart){
 			cell.distance += nextPos - cell.centPos;
-			cell.Shift(vess, time);
+			cell.Shift(vess, time, cell == player);
 		}
 		if(cell == player){
 			cell.speed = Mathf.Log(cell.distance + 8);
+			if(cell.CEshow){
+				collisionEffect.transform.position = cell.CEposition;
+				collisionEffect.transform.rotation = cell.CErotation;
+			}
 		}
 			
 		cell.centPos = nextPos;
@@ -86,8 +91,8 @@ public class Map{
 				AbandonVessel();
 				RandomGenerateVessel();
 				
-				RandomGenerateAICell((cell.cellType + 1) % 3,cell.speed / 2);
-				RandomGenerateAICell((cell.cellType + 2) % 3,cell.speed / 2);
+				RandomGenerateAICell(3, cell.speed / 2);
+				RandomGenerateAICell(3, cell.speed / 2);
 			}
 			vess = SwitchToNextVessel(cell, vess);
 		}
@@ -181,7 +186,7 @@ public class Map{
 			
 			var vcp = Random.value * (vess.vessLength - Global.VIRUSradius);
 			var vrot = 360 * Random.value;
-			var voff = Random.value/2 + 0.5;
+			var voff = 4 * Random.value / 5 + 0.2;
 			vess.AddItem(Global.typeVIRUS, Global.VIRUSradius, vcp, vrot, voff);
 			VIRUSnum = -1;
 		}
@@ -222,6 +227,9 @@ public class Map{
 				break;
 			case Global.typeTriangleCell :
 				cell = new Cell(Global.typeTriangleCell, Global.TriangleCellRadius, curVess, map, vesselOff);
+				break;
+			case Global.typeBubble :
+				cell = new Cell(Global.typeBubble, Global.BubbleRadius, curVess, map, vesselOff);
 				break;
 		}
 		//random a position not collider with other cells

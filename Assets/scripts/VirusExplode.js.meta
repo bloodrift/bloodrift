@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 32c4a7bb81043c14b8759b0a5f387f20
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - VirusCollision: {fileID: 100000, guid: 699d8deae9b753644bf628375e52f80e, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
