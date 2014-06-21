@@ -30,7 +30,7 @@ public class Cell{
 	
 	//paras for new items
 	public var onRush : boolean;
-	public var rushTime : float;
+	static public  var totalRushTime : float = 10;
 	public var leftRushTime : float;
 	
 	public var camPos : Vector3;
@@ -54,21 +54,15 @@ public class Cell{
 		energy = 0;
 	}
 	
-	public function rushSpeed() : float{
-		var delta = rushTime - leftRushTime;
-		if(delta <= 1){
-			return speed * (1 - delta) + Global.rushSpeed * delta;
+	public function RushSpeed() : float{
+		var deltaTime = totalRushTime - leftRushTime;
+		if(deltaTime <= 3){
+			return (speed * (3 - deltaTime) + Global.rushSpeed * deltaTime) / 3;
 		}
-		if(leftRushTime <= 1){
-			return speed * (1 - leftRushTime) + Global.rushSpeed * leftRushTime;
+		if(leftRushTime <= 3){
+			return (speed * (3 - leftRushTime) + Global.rushSpeed * leftRushTime) / 3;
 		}
 		return Global.rushSpeed;
-	}
-		
-	public function Rush(time : float){
-		onRush = true;
-		rushTime = time;
-		leftRushTime += time;
 	}
 
 	public function shiftDragForce() : float{
@@ -93,6 +87,8 @@ public class Cell{
 		var shiftRotForce : Vector3 = Vector3.zero;
 		if (vess.vessType%2 != 0)
 			shiftRotForce = (1 * Global.shiftDragForce + speed / Global.rushSpeed* (Global.maxShiftForce - Global.shiftDragForce)) * (Quaternion.AngleAxis(-rotateAngle, Vector3(0, 0, 1)) * Vector3(0, 1, 0));
+		if(onRush)
+			shiftRotForce += Global.maxShiftForce * - posOff;
 		posSpeed += (drag + posForce + shiftRotForce) * 0.5 * time;
 
 		selfRot = Quaternion.AngleAxis(posOff.magnitude * 270, Vector3(posOff.y, -posOff.x, 0));
@@ -106,7 +102,6 @@ public class Cell{
 				CEposition = vess.CentPos2RealPos(centPos) - up * (vess.GetRadius(centPos) - 0.05);
 				CErotation = Quaternion.LookRotation(-vess.CentPos2ForwardDir(centPos), up);
 				CEshow = true;
-				Debug.Log("set");
 			}
 			posOff = (vess.GetRadius(centPos) - cellRadius) * posOff.normalized;
 			var upPos = posOff.normalized;

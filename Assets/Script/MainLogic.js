@@ -18,6 +18,7 @@ var ATP : GameObject;
 var VIRUS : GameObject;
 var HEMO : GameObject;
 var BUBBLE : GameObject;
+var BIGBUBBLE : GameObject;
 
 var COLLOSION :GameObject;
 
@@ -48,6 +49,9 @@ static public class Global{
 	
 	static public var typeBubble : int = 3;
 	static public var BubbleRadius : float = 0.1; 
+	
+	static public var typeBigBubble : int = 4;
+	static public var BigBubbleRadius : float = 0.2;
 	
 	static public var typeATP : int = 0;
 	static public var ATPgap : float = 0.5;
@@ -105,7 +109,7 @@ function Start(){
 		cell = vesselMap.AICells[i];
 		InstantiateCell(cell);
 	}
-	vesselMap.collisionEffect = Instantiate(COLLOSION, Vector3.zero, Quaternion(0, 0, 0, 1));
+	vesselMap.collisionEffect = Instantiate(COLLOSION, Vector3(-100, -100, -100), Quaternion(0, 0, 0, 1));
 	// find gui object;
 	GUICarrier = GameObject.Find("GUICarrier");
 
@@ -125,6 +129,9 @@ function InstantiateCell(cell : Cell){
 			break;
 		case Global.typeBubble :
 			cell.instance = Instantiate(BUBBLE, cell.position, cell.rotation);
+			break;
+		case Global.typeBigBubble :
+			cell.instance = Instantiate(BIGBUBBLE, cell.position, cell.rotation);
 			break;
 		default:
 			break;
@@ -226,6 +233,10 @@ function FixedUpdate(){
 	if(Input.GetKeyUp(KeyCode.S)){
 		if(udSpeed == -Global.maxShiftForce)
 			udSpeed = 0;
+	}
+	
+	if(Input.GetKeyDown(KeyCode.Space)){
+		vesselMap.Rush(vesselMap.player);
 	}	
 	vesselMap.SetShiftForce(vesselMap.player, Vector3(lrSpeed, udSpeed, 0));
 	
@@ -242,7 +253,9 @@ function FixedUpdate(){
 		indieEffects.motionBlur = true;
 	}*/
 	
-	vesselMap.ItemHit(vesselMap.player);
+	if(!vesselMap.player.onRush){
+		vesselMap.ItemHit(vesselMap.player);
+	}
 	vesselMap.cam.instance.transform.position = vesselMap.player.camPos;
 	vesselMap.cam.instance.transform.rotation = vesselMap.player.camRot;
 	
@@ -256,6 +269,18 @@ function FixedUpdate(){
 	if(vesselMap.player.life <= 0){
 		Global.gameOver = true;
 		Destroy(vesselMap.player.instance);
+		vesselMap.player.speed = 3;
+		vesselMap.newCell = 0;
+		ClearAICells(vesselMap.AICells);
+	}
+}
+
+public function ClearAICells(cells : Array){
+	var cell : Cell;
+	for(var i = cells.length - 1; i >= 0 ; --i){
+		cell = cells[i];
+		Destroy(cell.instance);
+		cells.RemoveAt(i);
 	}
 }
 
@@ -296,7 +321,7 @@ public function AICompute(cells : Array, mainCell : Cell, map : Array, vesselOff
 		//		cell.posSpeed += -1.5 * (mainCell.posSpeed.magnitude + 1)/ Global.maxShiftSpeed * posOff.normalized / 2; 
 		//		mainCell.posSpeed += 1.5 * (cell.posSpeed.magnitude + 1)/ Global.maxShiftSpeed * posOff.normalized / 2;
 				cell.posSpeed += -2 * posOff.normalized / 2; 
-				mainCell.posSpeed += 2 * posOff.normalized / 2;
+				mainCell.posSpeed += posOff.normalized / 2;
 			}
 		}
 	

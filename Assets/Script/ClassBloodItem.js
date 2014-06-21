@@ -32,6 +32,7 @@ public class BloodItem{
 				cell.energy += 5;
 				if(cell.energy > 100)
 					cell.energy = 100;
+				cell.instance.SendMessage("HitATP");
 				GUICarrier.SendMessage("OnHitATP", cell.energy);
 				break;
 			case Global.typeVIRUS :
@@ -40,6 +41,7 @@ public class BloodItem{
 					cell.life = 0;
 				//	cell.energy = 100;
 				}
+				cell.instance.SendMessage("HitVirus");
 				this.instance.SendMessage("SetSpeed", cell.speed);
 				this.instance.SendMessage("Explode", cell.rotation);
 				GUICarrier.SendMessage("OnHitVirus", cell.life);

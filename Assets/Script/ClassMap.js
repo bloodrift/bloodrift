@@ -24,6 +24,7 @@ public class Map{
 	
 	private var VIRUSnum : int;
 	private var HEMOnum : int;
+	public var GUICarrier : GameObject;
 	
 	public function Map(){
 		map = new Array();
@@ -48,6 +49,9 @@ public class Map{
 			GameObject.Destroy(cell.instance);
 			AICells.RemoveAt(index);
 		}
+		if(cell.curVess - vesselOff > Global.maxVessel - 1){
+			return;
+		}
 		var vess : Vessel = map[cell.curVess - vesselOff];
 		//beneth is a unclear model, we can modify it later
 		var rots = cell.RealRotate() * Mathf.PI / 180.0;
@@ -60,16 +64,13 @@ public class Map{
 			nextPos = vess.NextCentPos(cell.centPos, cell.speed * speedModifier, time);
 		else {
 			//get speed	
-			var sp : float = cell.rushSpeed();
+			var sp : float = cell.RushSpeed();
 			nextPos = vess.NextCentPos(cell.centPos, sp, time);
 			cell.leftRushTime -= time;
 			if (cell.leftRushTime <= 0){
 				cell.onRush = false;
 				cell.leftRushTime = 0;
-				
-				//var motionBlur : MotionBlur = cam.instance.GetComponent(MotionBlur);
-				//motionBlur.isMotionBlur = true;
-				cam.instance.SendMessage("doBlur",true);
+				cam.instance.SendMessage("OnBlur", false);
 			}
 		}
 		
@@ -94,13 +95,26 @@ public class Map{
 				AbandonVessel();
 				RandomGenerateVessel();
 				
-				RandomGenerateAICell(3, cell.speed / 2);
-				RandomGenerateAICell(3, cell.speed / 2);
+				RandomGenerateAICell(Global.typeBubble, cell.speed / 2);
+				RandomGenerateAICell(Global.typeBubble, cell.speed / 2);
+				if(AICells.length % 2 == 0)
+					RandomGenerateAICell(Global.typeBigBubble, cell.speed / 2);
 			}
 			vess = SwitchToNextVessel(cell, vess);
 		}
 		//-----------------------------------
 		cell.UpdatePos(vess);	
+	}
+	
+	public function Rush(cell : Cell){
+		if(!cell.onRush && cell.energy == 100){
+			cell.onRush = true;
+			cell.leftRushTime = cell.totalRushTime;
+			cell.energy = 0;
+			GUICarrier = GameObject.Find("GUICarrier");
+			GUICarrier.SendMessage("OnRelease");
+			cam.instance.SendMessage("OnBlur", true);
+		}
 	}
 
 	public function SetShiftForce(cell : Cell, sf : Vector3){
@@ -211,9 +225,9 @@ public class Map{
 		for (var j = 0; j < vess.items.length; ++j){
 			item = vess.items[j];
 			if(item.OnCollision(cell)){
+				item.ActOn(cell, cam);
 				GameObject.Destroy(item.instance, 0);
 				vess.items.remove(item);
-				item.ActOn(cell, cam);
 			}
 		}
 	}
@@ -233,6 +247,9 @@ public class Map{
 				break;
 			case Global.typeBubble :
 				cell = new Cell(Global.typeBubble, Global.BubbleRadius, curVess, map, vesselOff);
+				break;
+			case Global.typeBigBubble :
+				cell = new Cell(Global.typeBigBubble, Global.BigBubbleRadius, curVess, map, vesselOff);
 				break;
 		}
 		//random a position not collider with other cells
