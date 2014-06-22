@@ -44,7 +44,7 @@ public class BloodItem{
 				cell.instance.SendMessage("HitVirus");
 				this.instance.SendMessage("SetSpeed", cell.speed);
 				this.instance.SendMessage("Explode", cell.rotation);
-				GUICarrier.SendMessage("OnHitVirus", cell.life);
+				//GUICarrier.SendMessage("OnHitVirus", cell.life);
 				var Perlin_Noise : Perlin_Noise = cam.instance.GetComponent(Perlin_Noise);
 				Perlin_Noise.test = true;
 				break;
@@ -52,7 +52,7 @@ public class BloodItem{
 				cell.life += 20;
 				if(cell.life > 100)
 					cell.life = 100;	
-				GUICarrier.SendMessage("OnHitHemoglobin", cell.life);
+				//GUICarrier.SendMessage("OnHitHemoglobin", cell.life);
 				break;
 		}
 	}

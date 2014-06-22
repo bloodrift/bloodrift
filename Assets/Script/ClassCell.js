@@ -41,6 +41,7 @@ public class Cell{
 	public var CEposition : Vector3;
 	public var CErotation : Quaternion;
 	public var CEshow : boolean;
+	
 
 	public function Cell(type : int, rd : float, cv : int, map : Array, vesselOff : int){
 		cellType = type;

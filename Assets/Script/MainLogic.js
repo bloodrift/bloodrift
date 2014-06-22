@@ -23,6 +23,7 @@ var BIGBUBBLE : GameObject;
 var COLLOSION :GameObject;
 
 var GUICarrier : GameObject;
+var PlayerSystem : GameObject;
 //var mainui : MainUi ;
 
 static public class Global{
@@ -112,6 +113,7 @@ function Start(){
 	vesselMap.collisionEffect = Instantiate(COLLOSION, Vector3(-100, -100, -100), Quaternion(0, 0, 0, 1));
 	// find gui object;
 	GUICarrier = GameObject.Find("GUICarrier");
+	PlayerSystem = GameObject.Find("PlayerSystem");
 
 	//mainui = GUICarrier.GetComponent(MainUi);
 }
@@ -264,14 +266,19 @@ function FixedUpdate(){
 	
 	if(Global.gameStart && !Global.gameOver){
 		GUICarrier.SendMessage("OnUpdateDistance", vesselMap.player.distance);
-		GUICarrier.SendMessage("OnHitVirus", vesselMap.player.life);
+		// why here?
+		GUICarrier.SendMessage("OnUpdateBlood", vesselMap.player.life);
 	}
-	if(vesselMap.player.life <= 0){
+	if(vesselMap.player.life <= 0 && !Global.gameOver){
 		Global.gameOver = true;
 		Destroy(vesselMap.player.instance);
 		vesselMap.player.speed = 3;
 		vesselMap.newCell = 0;
 		ClearAICells(vesselMap.AICells);
+		
+		//
+		GUICarrier.SendMessage(  "OnGameOver",vesselMap.player.distance);
+		PlayerSystem.SendMessage("OnGameOver",vesselMap.player.distance);
 	}
 }
 

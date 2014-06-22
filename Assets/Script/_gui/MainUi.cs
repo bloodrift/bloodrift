@@ -41,14 +41,15 @@ public class MainUi : MonoBehaviour {
 
 
 	}
-	// decrease currentBlood
 
-	void OnHitVirus(int blood){
+	// display currentBlood
+	void OnUpdateBlood(int blood){
 		currentBlood = blood;
-		if(currentBlood <= 0){
-			OnGameOver ();
-			return;
-		}
+		// OnGameOver called by MainLogic.
+//		if(currentBlood <= 0){
+//			OnGameOver ();
+//			return;
+//		}
 
 		float percentage = currentBlood / totalBlood;
 
@@ -56,21 +57,25 @@ public class MainUi : MonoBehaviour {
 		if( percentage <= bloodWarningThresh && bloodPercentage > bloodWarningThresh){
 			OnShakeScreen(true);
 		}
+		else if(percentage > bloodWarningThresh && bloodPercentage <= bloodWarningThresh){
+			OnShakeScreen(false);
+		}
+
 		bloodPercentage = percentage;
 		bloodBar.barSize = bloodPercentage;
 	}
 
-	void OnHitHemoglobin(int blood){
-		currentBlood = blood;
-		float percentage = currentBlood / totalBlood;
-		// first time exiting from emergent situation.
-		if(percentage > bloodWarningThresh &&
-		   bloodPercentage <= bloodWarningThresh){
-			OnShakeScreen(false);
-		}
-		bloodPercentage = percentage;
-		bloodBar.barSize = bloodPercentage;
-	}
+//	void OnHitHemoglobin(int blood){
+//		currentBlood = blood;
+//		float percentage = currentBlood / totalBlood;
+//		// first time exiting from emergent situation.
+//		if(percentage > bloodWarningThresh &&
+//		   bloodPercentage <= bloodWarningThresh){
+//			OnShakeScreen(false);
+//		}
+//		bloodPercentage = percentage;
+//		bloodBar.barSize = bloodPercentage;
+//	}
 	
 	IEnumerator OnFullEnergy(){
 
@@ -102,9 +107,9 @@ public class MainUi : MonoBehaviour {
 		}
 	}
 
-	void OnGameOver(){
-		gameObject.GetComponent<GUICarrier>().OnGameOver(distanceLbl.text);
-	}
+//	void OnGameOver(){
+//		gameObject.GetComponent<GUICarrier>().OnGameOver(distanceLbl.text);
+//	}
 
 	UILabel distanceLbl;
 	void OnUpdateDistance(float distance){
