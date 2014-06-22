@@ -39,7 +39,7 @@ static public class Global{
 	static public var gravity : float = 0.6;
 	
 	static public var typeRedCell : int = 0;
-	static public var RedCellRadius : float = 0.15;
+	static public var RedCellRadius : float = 0.2;
 	
 	static public var typeWhiteCell : int = 1;
 	static public var WhiteCellRadius : float = 0.12;
@@ -55,7 +55,7 @@ static public class Global{
 	
 	static public var typeATP : int = 0;
 	static public var ATPgap : float = 0.5;
-	static public var ATPradius : float = 0.15;
+	static public var ATPradius : float = 0.2;
 	
 	static public var typeVIRUS : int = 1;
 	static public var VIRUSradius : float = 0.15;
