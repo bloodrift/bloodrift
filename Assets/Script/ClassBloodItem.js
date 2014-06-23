@@ -8,7 +8,6 @@ public class BloodItem{
 	public var rotation : Quaternion;
 	public var instance : GameObject;
 	static public var GUICarrier : GameObject = GameObject.Find("GUICarrier");
-;
 	
 	public function BloodItem(type : int, r : float, pos : Vector3, rot : Quaternion, cp : float){	
 		itemType = type;
@@ -29,7 +28,7 @@ public class BloodItem{
 	public function ActOn(cell : Cell, cam : Cell){
 		switch (itemType){
 			case Global.typeATP :
-				cell.energy += 5;
+				cell.energy += 1;
 				if(cell.energy > 100)
 					cell.energy = 100;
 				cell.instance.SendMessage("HitATP");

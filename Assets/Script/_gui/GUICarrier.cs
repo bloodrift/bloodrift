@@ -22,19 +22,33 @@ public class GUICarrier : MonoBehaviour {
 	/* Start Panel */
 	GameObject startPanelStartBtn;
 	GameObject startPanelRankBtn;
+	GameObject startPanelMuteBtn;
 
 	// Start Panel >> Player Panel
-	void OnStartPanelStartBtn(GameObject go, bool isPressed){
+	void OnStartPanelStartBtn(GameObject go){
 		NGUITools.SetActive(playerPanel, true);
 		NGUITools.SetActive(startPanel , false);
 	}
 	
-	void OnStartPanelRankBtn(GameObject go, bool isPressed){
+	void OnStartPanelRankBtn(GameObject go){
 		NGUITools.SetActive(rankPanel, true);
 		NGUITools.SetActive(startPanel , false);
 
 		OnReloadRankPanel();
 	}
+	private bool isMute = false;
+	void OnStartPanelMuteBtn(GameObject go ){
+
+		isMute = !isMute;
+		audioSystem.OnMute(isMute);
+		if( isMute ){
+			startPanelMuteBtn.GetComponentInChildren<UILabel>().text = "Vocal";
+		}
+		else{
+			startPanelMuteBtn.GetComponentInChildren<UILabel>().text = "Mute";
+		}
+ 	}
+
 	/*************************************************************************/
 	/* Rank Panel */
 	GameObject rankPanelBackBtn;
@@ -42,7 +56,7 @@ public class GUICarrier : MonoBehaviour {
 	public Color rankPanelGridColor;
 	public UIFont rankPanelGridFont;
 
-	void OnRankPanelBackBtn(GameObject go, bool isPressed){
+	void OnRankPanelBackBtn(GameObject go){
 		NGUITools.SetActive(startPanel, true);
 		NGUITools.SetActive(rankPanel,false);
 	}
@@ -109,7 +123,7 @@ public class GUICarrier : MonoBehaviour {
 	UILabel playerPanelInvalidNameLbl;
 
 	// -->> Mode Panel
-	void OnPlayerPanelNextBtn(GameObject go, bool isPressed){
+	void OnPlayerPanelNextBtn(GameObject go){
 		// check if empty.
 		if(string.IsNullOrEmpty( playerPanelNameInput.mText) ){
 			// invalid username!
@@ -126,30 +140,30 @@ public class GUICarrier : MonoBehaviour {
 	}
 
 	// -->> Start Panel
-	void OnPlayerPanelBackBtn(GameObject go, bool isPress){
+	void OnPlayerPanelBackBtn(GameObject go){
 		NGUITools.SetActive(startPanel,true);
 		NGUITools.SetActive(playerPanel,false);
 	}
 	/***************************************************************************/
 	/* Mode Panel */
 	GameObject modePanelEndlessBtn;
-	GameObject modePabelRacingBtn;
-
+	GameObject modePanelRacingBtn;
+	GameObject modePanelBackBtn;
 	enum GameMode { Endless, Racing };
 	GameMode gameMode;
-	void OnModePanelEndlessBtn(GameObject go,bool isPress){
+	void OnModePanelEndlessBtn(GameObject go){
 		gameMode = GameMode.Endless;
 		NGUITools.SetActive(cellPanel,true);
 		NGUITools.SetActive(modePanel,false);
 		OnReloadCellPanel();	
 	}
-	void OnModePanelRacingBtn(GameObject go, bool isPress){
+	void OnModePanelRacingBtn(GameObject go){
 		gameMode = GameMode.Racing;
 		NGUITools.SetActive(cellPanel,true);
 		NGUITools.SetActive(modePanel,false);
 		OnReloadCellPanel();
 	}
-	void OnModePanelBackBtn(GameObject go, bool isPress){
+	void OnModePanelBackBtn(GameObject go){
 		NGUITools.SetActive(playerPanel,true);
 		NGUITools.SetActive(modePanel,false);
 	}
@@ -220,13 +234,13 @@ public class GUICarrier : MonoBehaviour {
 		}
 
 	}
-	void OnCellPanelToy1(GameObject go, bool isPressed){
+	void OnCellPanelToy1(GameObject go){
 		OnCellPanelStart(0);
 	}
-	void OnCellPanelToy2(GameObject go, bool isPressed){
+	void OnCellPanelToy2(GameObject go){
 		OnCellPanelStart(1);
 	}
-	void OnCellPanelToy3(GameObject go, bool isPressed){
+	void OnCellPanelToy3(GameObject go){
 		OnCellPanelStart(2);
 	}
 
@@ -253,7 +267,7 @@ public class GUICarrier : MonoBehaviour {
 		audioSystem.OnGameStart();
 	}
 
-	void OnCellPanelBackBtn(GameObject go, bool isPressed){
+	void OnCellPanelBackBtn(GameObject go){
 		NGUITools.SetActive(modePanel,true);
 		NGUITools.SetActive(cellPanel,false);
 	}
@@ -265,7 +279,7 @@ public class GUICarrier : MonoBehaviour {
 	GameObject overPanelExitBtn;
 
 	// -->> Mode Panel
-	void OnOverPanelTryAgainBtn(GameObject go, bool isPressed){
+	void OnOverPanelTryAgainBtn(GameObject go){
 
 		NGUITools.SetActive(overPanel,false);
 		NGUITools.SetActive(modePanel,true);
@@ -274,19 +288,19 @@ public class GUICarrier : MonoBehaviour {
 
 	}
 
-	void OnOverPanelMenuBtn(GameObject go, bool isPressed){
+	void OnOverPanelMenuBtn(GameObject go){
 		NGUITools.SetActive(startPanel, true);
 		NGUITools.SetActive(overPanel, false);
 	}
 
-	void OnOverPanelRankBtn(GameObject go, bool isPressed){
+	void OnOverPanelRankBtn(GameObject go){
 		NGUITools.SetActive(rankPanel, true);
 		NGUITools.SetActive(overPanel, false);
 		
 		OnReloadRankPanel();
 	}
 
-	void OnOverPanelExitBtn(GameObject go, bool isPressed){
+	void OnOverPanelExitBtn(GameObject go){
 
 		Application.Quit();
 	}
@@ -300,11 +314,14 @@ public class GUICarrier : MonoBehaviour {
 		
 		startPanelStartBtn = startPanel.transform.FindChild("StartBtn").gameObject;
 		startPanelRankBtn  = startPanel.transform.FindChild("StartTable/RankBtn").gameObject; 	
-		UIEventListener.Get(startPanelStartBtn).onPress = OnStartPanelStartBtn; 
-		UIEventListener.Get(startPanelRankBtn) .onPress = OnStartPanelRankBtn;
+		startPanelMuteBtn = startPanel.transform.FindChild("StartTable/MuteBtn").gameObject;
+		UIEventListener.Get(startPanelStartBtn).onClick = OnStartPanelStartBtn; 
+		UIEventListener.Get(startPanelRankBtn) .onClick = OnStartPanelRankBtn;
+		UIEventListener.Get(startPanelMuteBtn) .onClick = OnStartPanelMuteBtn;
+		
 
 		rankPanelBackBtn = rankPanel.transform.FindChild("BackBtn").gameObject;
-		UIEventListener.Get (rankPanelBackBtn).onPress = OnRankPanelBackBtn;
+		UIEventListener.Get (rankPanelBackBtn).onClick = OnRankPanelBackBtn;
 		rankPanelGrid = rankPanel.transform.FindChild("Table/Grid").gameObject;
 
 		playerPanelNextBtn = playerPanel.transform.FindChild("NextBtn").gameObject;
@@ -312,34 +329,36 @@ public class GUICarrier : MonoBehaviour {
 		playerPanelNameInput = playerPanel.transform.FindChild("NameInput").gameObject.GetComponent<UIPopupListAndInput>();
 		playerPanelInvalidNameLbl = playerPanel.transform.FindChild("InvalidName").gameObject.GetComponent<UILabel>();
 		playerPanelInvalidNameLbl.enabled = false;
-		UIEventListener.Get (playerPanelNextBtn).onPress = OnPlayerPanelNextBtn;
-		UIEventListener.Get (playerPanelBackBtn).onPress = OnPlayerPanelBackBtn;
+		UIEventListener.Get (playerPanelNextBtn).onClick = OnPlayerPanelNextBtn;
+		UIEventListener.Get (playerPanelBackBtn).onClick = OnPlayerPanelBackBtn;
 	
 		modePanelEndlessBtn = modePanel.transform.FindChild("EndlessBtn").gameObject;
-		modePabelRacingBtn	= modePanel.transform.FindChild("RacingBtn").gameObject;
-		UIEventListener.Get (modePanelEndlessBtn).onPress = OnModePanelEndlessBtn;
-		UIEventListener.Get (modePabelRacingBtn).onPress  = OnModePanelRacingBtn;
+		modePanelRacingBtn	= modePanel.transform.FindChild("RacingBtn").gameObject;
+		modePanelBackBtn = modePanel.transform.FindChild("BackBtn").gameObject;
+		UIEventListener.Get (modePanelEndlessBtn).onClick = OnModePanelEndlessBtn;
+		UIEventListener.Get (modePanelRacingBtn).onClick  = OnModePanelRacingBtn;
+		UIEventListener.Get(modePanelBackBtn).onClick = OnModePanelBackBtn;
 
 		GameObject cellPanelBackBtn = cellPanel.transform.FindChild("BackBtn").gameObject;
-		UIEventListener.Get(cellPanelBackBtn).onPress  = OnCellPanelBackBtn;
+		UIEventListener.Get(cellPanelBackBtn).onClick  = OnCellPanelBackBtn;
 
 		GameObject cellPanelToy1 = cellPanel.transform.FindChild("Toy1").gameObject;
 		cellPanelToy2 = cellPanel.transform.FindChild("Toy2").gameObject;
 		cellPanelToy3 = cellPanel.transform.FindChild("Toy3").gameObject;
-		UIEventListener.Get (cellPanelToy1).onPress = OnCellPanelToy1;
-		UIEventListener.Get (cellPanelToy2).onPress = OnCellPanelToy2;
-		UIEventListener.Get (cellPanelToy3).onPress = OnCellPanelToy3;
+		UIEventListener.Get (cellPanelToy1).onClick = OnCellPanelToy1;
+		UIEventListener.Get (cellPanelToy2).onClick = OnCellPanelToy2;
+		UIEventListener.Get (cellPanelToy3).onClick = OnCellPanelToy3;
 
 
 		overPanelTryAgainBtn = overPanel.transform.FindChild("TryAgainBtn").gameObject;
-		UIEventListener.Get(overPanelTryAgainBtn).onPress = OnOverPanelTryAgainBtn;
+		UIEventListener.Get(overPanelTryAgainBtn).onClick = OnOverPanelTryAgainBtn;
 		overPanelDistanceLbl = overPanel.transform.FindChild("DistanceLbl").gameObject.GetComponent<UILabel>();
-		overPanelMenuBtn = overPanel.transform.FindChild("MenuBtn").gameObject;
+/*		overPanelMenuBtn = overPanel.transform.FindChild("MenuBtn").gameObject;
 		overPanelRankBtn = overPanel.transform.FindChild("RankBtn").gameObject;
 		overPanelExitBtn = overPanel.transform.FindChild("ExitBtn").gameObject;
-		UIEventListener.Get(overPanelMenuBtn).onPress=OnOverPanelMenuBtn;
-		UIEventListener.Get(overPanelRankBtn).onPress=OnOverPanelRankBtn;
-		UIEventListener.Get(overPanelExitBtn).onPress=OnOverPanelExitBtn;
+		UIEventListener.Get(overPanelMenuBtn).onClick=OnOverPanelMenuBtn;
+		UIEventListener.Get(overPanelRankBtn).onClick=OnOverPanelRankBtn;
+		UIEventListener.Get(overPanelExitBtn).onClick=OnOverPanelExitBtn;*/
 
 		UILight = GameObject.Find("UILight");
 

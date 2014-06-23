@@ -10,7 +10,6 @@ public class Cell{
 	public var radius : float;
 	public var instance : GameObject;
 	
-	public var mode : int;
 	public var centPos : float;
 	public var curVess : int;
 	public var speed : float;
@@ -18,6 +17,9 @@ public class Cell{
 	
 	//paras for rot
 	public var selfRot : Quaternion;
+	
+	public var ESelfRot : Quaternion; 
+	public var ESelfRotDirection : Vector3;
 	
 	//paras for drift mode
 	public var posOff : Vector3;
@@ -30,8 +32,11 @@ public class Cell{
 	
 	//paras for new items
 	public var onRush : boolean;
-	static public  var totalRushTime : float = 10;
+	static public var totalRushTime : float = 10;
+	static public var ERushTime : float = 5;
 	public var leftRushTime : float;
+	
+	public var EPosition : int;
 	
 	public var camPos : Vector3;
 	public var camRot : Quaternion;
@@ -47,12 +52,32 @@ public class Cell{
 		cellType = type;
 		radius = rd;
 		curVess = cv;
-		distance = 0;
 		var vess : Vessel = map[curVess - vesselOff];
 		posOff = Vector3(0, 0, 0);
-		UpdatePos(vess);
+		EPosition = 0;
+		if(Global.GameMode == Global.GameModeEndless){
+			ESelfRot = Quaternion(0, 0, 0, 1);
+			ESelfRotDirection = Vector3(0, 1, 0);
+			EUpdatePos(vess);
+		}
+		else {
+			RUpdatePos(vess);
+		}
 		life = 100;
 		energy = 0;
+		distance = 0;
+		onRush = false;
+	}
+	
+	public function ERushSpeed() : float{
+		var deltaTime = ERushTime - leftRushTime;
+		if(deltaTime <= 2){
+			return (speed * (2 - deltaTime) + Global.ERushSpeed * deltaTime) / 2;
+		}
+		if(leftRushTime <= 2){
+			return (speed * (2 - leftRushTime) + Global.ERushSpeed * leftRushTime) / 2;
+		}
+		return Global.ERushSpeed;
 	}
 	
 	public function RushSpeed() : float{
@@ -77,6 +102,39 @@ public class Cell{
 			shiftRotForce = 1 * (Quaternion.AngleAxis(-rotateAngle, Vector3(0, 0, 1)) * Vector3(0, 1, 0));
 		camPosSpeed += (drag + shiftRotForce) * 0.5 * time;
 		camPosOff += camPosSpeed * time;
+	}
+	
+	public function BoundCheck(vess : Vessel, isPlayer : boolean) : boolean{
+		var cellRadius = getRadiusInDir(vess.GetUpDir(centPos, RealRotate()));
+		if(EdgeDistance(vess) < 0){
+			if(isPlayer){
+				var up = vess.GetUpDir(centPos, RealRotate());
+				CEposition = vess.CentPos2RealPos(centPos) - up * (vess.GetRadius(centPos) - 0.05);
+				CErotation = Quaternion.LookRotation(-vess.CentPos2ForwardDir(centPos), up);
+				CEshow = true;
+			}
+		//	posOff = (vess.GetRadius(centPos) - cellRadius) * posOff.normalized;
+			switch (EPosition){
+				case Global.EPositionUpOut :
+					EPosition = Global.EPositionUp;
+					break;
+				case Global.EPositionDownOut :
+					EPosition = Global.EPositionDown;
+					break;
+				case Global.EPositionLeftOut :
+					EPosition = Global.EPositionLeft;
+					break;
+				case Global.EPositionRightOut :
+					EPosition = Global.EPositionRight;
+					break;
+			}
+			life -= 3;	
+			if(life < 0){
+				life = 0;
+			}
+			return true; 
+		}
+		return false;
 	}
 	
 	public function Shift(vess : Vessel, time : float, isPlayer : boolean){
@@ -130,20 +188,34 @@ public class Cell{
 		return rotateAngle + angle;
 	}
 	
-	public function UpdatePos(vess : Vessel){
+	public function EUpdatePos(vess : Vessel){
 		var lookat = vess.CentPos2ForwardDir(centPos);
 		var up = vess.GetUpDir(centPos, rotateAngle);
 		var rad = vess.GetRadius(centPos);
 		rotation = Quaternion.LookRotation(lookat, up);
 		position = vess.CentPos2RealPos(centPos);
-		// to modified by speed later
-		camPos = position - 2 * lookat;
-		camPos += rotation * camPosOff;		
-		camRot = Quaternion.LookRotation(position - camPos, up);
-
-		//position += (rad - radius) *(rotation * posOff);
+		camPos = position - 1 * lookat;
+		camPos += rotation * (posOff);
 		position += rotation * posOff;
-	//	rotation = rotation * Quaternion.AngleAxis(selfVrot, Vector3(0, 0, 1)) * Quaternion.AngleAxis(selfHrot, Vector3(0, 1, 0));
+		camRot = Quaternion.LookRotation(position - camPos, up);
+	//	rotation = rotation * ESelfRot;
+		rotation = rotation * Quaternion.AngleAxis(posOff.magnitude * 270, Vector3(posOff.y, -posOff.x, 0));
+		if(instance != null){
+			instance.transform.position = position;
+			instance.transform.rotation = rotation;
+		}
+	}
+	
+	public function RUpdatePos(vess : Vessel){
+		var lookat = vess.CentPos2ForwardDir(centPos);
+		var up = vess.GetUpDir(centPos, rotateAngle);
+		var rad = vess.GetRadius(centPos);
+		rotation = Quaternion.LookRotation(lookat, up);
+		position = vess.CentPos2RealPos(centPos);
+		camPos = position - 1 * lookat;
+		camPos += rotation * (posOff);
+		position += rotation * posOff;
+		camRot = Quaternion.LookRotation(position - camPos, up);
 		rotation = rotation * selfRot;
 		
 		if(instance != null){

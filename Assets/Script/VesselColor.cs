@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(Renderer))]
 public class VesselColor : MonoBehaviour {
 
 	float freqency = 0.0003f;
@@ -19,14 +20,9 @@ public class VesselColor : MonoBehaviour {
 		i++;
 		if( i >= maxi) i = 0;
 
-		//Color c = new Color(0,0,0);
-
 		c.r = Mathf.Sin(freqency*i+phase[0]) * width + center[0];
 		c.g = Mathf.Sin(freqency*i+phase[1]) * width + center[1];
-		c.b = Mathf.Sin(freqency*i+phase[2]) * width + center[2];
-	
-
-	
+		c.b = Mathf.Sin(freqency*i+phase[2]) * width + center[2];	
 	}
 
 	void Start(){

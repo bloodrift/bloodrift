@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(AudioSource))]
+[RequireComponent(typeof(AudioListener))]
 public class AudioSystem : MonoBehaviour {
 
 	public AudioClip backgroundClip;
@@ -82,8 +84,9 @@ public class AudioSystem : MonoBehaviour {
 		speedUp = gameObject.AddComponent<AudioSource>();
 		speedUp.clip = speedUpClip;
 		speedUp.playOnAwake = false;
-		
-
+	}
+	public void OnMute(bool mute){
+		AudioListener.pause = mute;
 	}
 
 }

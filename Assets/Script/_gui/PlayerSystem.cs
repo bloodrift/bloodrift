@@ -100,7 +100,7 @@ public class PlayerSystem : MonoBehaviour{
 	}
 
 	void OnApplicationQuit(){
-		Debug.Log("PlayerSystem: OnApplicationQuit");
+//		Debug.Log("PlayerSystem: OnApplicationQuit");
 		savePlayers();
 	}
 
@@ -110,7 +110,6 @@ public class PlayerSystem : MonoBehaviour{
 			savePlayers();
 		}
 	}
-
 
 	public void OnResetPlayerSystem(){
 		players.Clear ();

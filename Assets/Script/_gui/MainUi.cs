@@ -3,6 +3,8 @@ using System.Collections;
 
 public class MainUi : MonoBehaviour {
 
+	public GameObject GamePanel;
+	
 	public const float totalBlood = 100;
 	public float currentBlood;
 	private float bloodPercentage;
@@ -112,19 +114,20 @@ public class MainUi : MonoBehaviour {
 
 	// Use this for initialization
 	public void OnGameStart () {
-		GameObject go_shakeScreen = GameObject.Find("ShakeScreen");
+
+		GameObject go_shakeScreen = GamePanel.transform.FindChild("ShakeScreen").gameObject;
 		shakeScreen   = go_shakeScreen.GetComponent<TweenColor>();
 		shakeScreenBg = go_shakeScreen.GetComponentInChildren<UIWidget>();
 	
-		GameObject go_bloodBar = GameObject.Find("BloodBar");
+		GameObject go_bloodBar = GamePanel.transform.FindChild("BloodBar").gameObject;
 		bloodBar = go_bloodBar.GetComponent<UIScrollBar>();
 		bloodBarFgTA = go_bloodBar.GetComponentInChildren<TweenAlpha>();
 		OnShakeScreen(false);
 
-		GameObject go_energyBar = GameObject.Find("EnergyBar");
+		GameObject go_energyBar = GamePanel.transform.FindChild("EnergyBar").gameObject;
 		energyBar = go_energyBar.GetComponent<UIScrollBar>();
 		energyBarTS = go_energyBar.GetComponent<TweenSize>();
-		energyBarTC = GameObject.Find("EnergyBar/Foreground").GetComponent<TweenColor>();
+		energyBarTC = GamePanel.transform.FindChild("EnergyBar/Foreground").GetComponent<TweenColor>();
 
 		currentBlood = totalBlood;
 		bloodPercentage = currentBlood/totalBlood;
@@ -134,7 +137,7 @@ public class MainUi : MonoBehaviour {
 		energyPercentage = currentEnergy/totalEnergy;
 		energyBar.barSize = energyPercentage;
 
-		distanceLbl = GameObject.Find("DistanceLbl").GetComponent<UILabel>();
+		distanceLbl = GamePanel.transform.FindChild("DistanceLbl").GetComponent<UILabel>();
 	}
 
 }
