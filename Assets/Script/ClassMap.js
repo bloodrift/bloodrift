@@ -12,6 +12,7 @@ public class Map{
 	public var newCell : int;
 	public var AICells : Array;
 	
+	public var CircleNum : int;
 	//paras for random map generation
 	public var curVesselRadius : float;
 	public var numOfBT : int;
@@ -50,7 +51,8 @@ public class Map{
 			InitMap1();
 			player = new Cell(Global.typeRedCell, Global.RedCellRadius, 0, map, vesselOff);
 			cam = new Cell(42, 0, 0, map, vesselOff);
-			AICells = new Array();	
+			AICells = new Array();
+			CircleNum = 1;	
 			RandomGenerateAICell(Global.typeBubble, 0);
 			RandomGenerateAICell(Global.typeBubble, 0);
 			RandomGenerateAICell(Global.typeBigBubble, 0);
@@ -289,6 +291,12 @@ public class Map{
 		cell.curVess += 1;
 		if(cell.curVess == map.length){
 			cell.curVess = 0;
+			if(cell == player){
+				CircleNum ++;
+				if(CircleNum > 3){
+					Global.GameOver = true;
+				}
+			}
 		}
 		// at the end
 		vess = map[cell.curVess];
@@ -381,9 +389,9 @@ public class Map{
 				vess.AddItem(Global.typeVIRUS, Global.VIRUSradius, vcp, lastModRotation, voff);	
 				arr.RemoveAt(x);
 			}
-			VirusNum = - (3 * VirusLevel - 2);
+			VirusNum = - (2 * VirusLevel - 1);
 		}
-		else VirusNum = 1;
+		else VirusNum += 1;
 	}
 	
 	public function ItemHit(cell : Cell){

@@ -327,12 +327,12 @@ public class GUICarrier : MonoBehaviour {
 		overPanelTryAgainBtn = overPanel.transform.FindChild("TryAgainBtn").gameObject;
 		UIEventListener.Get(overPanelTryAgainBtn).onPress = OnOverPanelTryAgainBtn;
 		overPanelDistanceLbl = overPanel.transform.FindChild("DistanceLbl").gameObject.GetComponent<UILabel>();
-/*		overPanelMenuBtn = overPanel.transform.FindChild("MenuBtn").gameObject;
+		overPanelMenuBtn = overPanel.transform.FindChild("MenuBtn").gameObject;
 		overPanelRankBtn = overPanel.transform.FindChild("RankBtn").gameObject;
 		overPanelExitBtn = overPanel.transform.FindChild("ExitBtn").gameObject;
 		UIEventListener.Get(overPanelMenuBtn).onPress=OnOverPanelMenuBtn;
 		UIEventListener.Get(overPanelRankBtn).onPress=OnOverPanelRankBtn;
-		UIEventListener.Get(overPanelExitBtn).onPress=OnOverPanelExitBtn;*/
+		UIEventListener.Get(overPanelExitBtn).onPress=OnOverPanelExitBtn;
 
 		UILight = GameObject.Find("UILight");
 

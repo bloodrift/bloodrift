@@ -25,6 +25,7 @@ var COLLOSION :GameObject;
 var GUICarrier : GameObject;
 var PlayerSystem : GameObject;
 //var mainui : MainUi ;
+//var racingUI : RacingUI;
 
 static public class Global{
 	public var GameStart : boolean = false;
@@ -340,7 +341,6 @@ function Update(){
 		if(Input.GetKeyUp(KeyCode.K)){
 			RMoveForce -= Global.RMaxAccelerateDrag;
 		}
-		Debug.Log(vesselMap.player.speed);
 		vesselMap.SetAccelerateForce(vesselMap.player, RMoveForce);
 		vesselMap.SetShiftForce(vesselMap.player, Vector3(lrSpeed, udSpeed, 0));
 		if(Input.GetKeyDown(KeyCode.Space)){
@@ -357,6 +357,16 @@ function Update(){
 			cell = vesselMap.AICells[i];
 			vesselMap.RMove(cell, Time.deltaTime);
 		}
+		
+		GUICarrier.SendMessage("OnUpdateSpeed",vesselMap.player.speed);
+		GUICarrier.SendMessage("OnUpdateCircle",vesselMap.CircleNum);
+		//GUICarrier.SendMessage("OnUpdateProgress",vesselMap.player.speed);
+		Global.GameOver = true;
+		if(Global.GameOver){
+			GUICarrier.SendMessage("OnRacingOver");
+		}
+		
+
 	}
 	
 	vesselMap.cam.instance.transform.position = vesselMap.player.camPos;

@@ -36,7 +36,7 @@ public class RacingUi : MonoBehaviour
 	private float energyPercentage;
 
 	float speed;
-	float fullSpeed = 300f;	// XXX: should be set OnRacingStart
+	float fullSpeed = 10f;	// XXX: should be set OnRacingStart
 
 	public void OnUpdateRank(int i){
 		rank = i; // reserved.
