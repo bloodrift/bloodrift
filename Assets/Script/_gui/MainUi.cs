@@ -46,11 +46,6 @@ public class MainUi : MonoBehaviour {
 	void OnUpdateBlood(int blood){
 		currentBlood = blood;
 		// OnGameOver called by MainLogic.
-//		if(currentBlood <= 0){
-//			OnGameOver ();
-//			return;
-//		}
-
 		float percentage = currentBlood / totalBlood;
 
 		// first time enter emergent situation.
@@ -78,7 +73,6 @@ public class MainUi : MonoBehaviour {
 //	}
 	
 	IEnumerator OnFullEnergy(){
-
 		energyBarTC.Play(true);
 		yield return new WaitForSeconds(2);
 		energyBarTC.enabled = false;
@@ -97,7 +91,6 @@ public class MainUi : MonoBehaviour {
 	}
 
 	void OnRelease(){
-
 		if( energyPercentage >= 1.0){
 			currentEnergy = 0;
 			energyPercentage = currentEnergy/totalEnergy;
@@ -133,7 +126,6 @@ public class MainUi : MonoBehaviour {
 		energyBarTS = go_energyBar.GetComponent<TweenSize>();
 		energyBarTC = GameObject.Find("EnergyBar/Foreground").GetComponent<TweenColor>();
 
-
 		currentBlood = totalBlood;
 		bloodPercentage = currentBlood/totalBlood;
 		bloodBar.barSize = bloodPercentage;
@@ -144,5 +136,5 @@ public class MainUi : MonoBehaviour {
 
 		distanceLbl = GameObject.Find("DistanceLbl").GetComponent<UILabel>();
 	}
-	
+
 }
