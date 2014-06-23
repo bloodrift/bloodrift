@@ -9,13 +9,15 @@ public class GUICarrier : MonoBehaviour {
 
 	public GameObject startPanel;
 	public GameObject playerPanel;
+	public GameObject modePanel;
 	public GameObject cellPanel;
 	public GameObject rankPanel;
 	public GameObject overPanel;
 	public GameObject gamePanel;
+	public GameObject racingPanel;
 	public GameObject background;
 	public GameObject UILight;
-
+	/*************************************************************************/
 	/* Start Panel */
 	GameObject startPanelStartBtn;
 	GameObject startPanelRankBtn;
@@ -32,12 +34,12 @@ public class GUICarrier : MonoBehaviour {
 
 		OnReloadRankPanel();
 	}
-
+	/*************************************************************************/
 	/* Rank Panel */
 	GameObject rankPanelBackBtn;
-	GameObject rankPanelTable;
-	public Color rankPanelTableColor;
-	public UIFont rankPanelTableFont;
+	GameObject rankPanelGrid;
+	public Color rankPanelGridColor;
+	public UIFont rankPanelGridFont;
 
 	void OnRankPanelBackBtn(GameObject go, bool isPressed){
 		NGUITools.SetActive(startPanel, true);
@@ -51,54 +53,61 @@ public class GUICarrier : MonoBehaviour {
 		int i = 0;
 		Color color; 
 
-		GameObject container = rankPanelTable.transform.FindChild("Grid").gameObject;//GetComponentInChildren<UIGrid>();
+		//GameObject container = rankPanelGrid.transform.FindChild("Grid").gameObject;//GetComponentInChildren<UIGrid>();
 		//container.gameObject.AddComponent<UICenterOnChild>();
 		//container.arrangement = UIGrid.Arrangement.Vertical;
+
+		foreach( Transform child in rankPanelGrid.transform){
+			GameObject.Destroy(child.gameObject);
+		}
+
 		foreach( PlayerSystem.Player p in players){
 			i++;
 
 			if( curPlayerName != null && p.name.Equals(curPlayerName))
 				color = Color.yellow;
 			else
-				color = rankPanelTableColor;
+				color = rankPanelGridColor;
 
 
-			UILabel no = NGUITools.AddChild<UILabel>(container);
+			UILabel no = NGUITools.AddChild<UILabel>(rankPanelGrid);
 			no.color = color;
-			no.font =  rankPanelTableFont;
+			no.font =  rankPanelGridFont;
 			no.text = i.ToString()+"  "+p.name+"  "+p.distance.ToString();
 			no.MakePixelPerfect();
 			no.gameObject.AddComponent<UIDragPanelContents>();
 			BoxCollider bno = no.gameObject.AddComponent<BoxCollider>();
 			bno.size = no.transform.localScale;
 			
-//			UILabel playername = NGUITools.AddChild<UILabel>(rankPanelTable);
+//			UILabel playername = NGUITools.AddChild<UILabel>(rankPanelGrid);
 //			playername.color = color;
-//			playername.font =  rankPanelTableFont;
+//			playername.font =  rankPanelGridFont;
 //			playername.text = p.name;
 //			playername.MakePixelPerfect();
 //			playername.gameObject.AddComponent<UIDragPanelContents>();
 //			playername.gameObject.AddComponent<BoxCollider>();
 //			
-//			UILabel playerdist = NGUITools.AddChild<UILabel>(rankPanelTable);
+//			UILabel playerdist = NGUITools.AddChild<UILabel>(rankPanelGrid);
 //			playerdist.color = color;
-//			playerdist.font =  rankPanelTableFont;
+//			playerdist.font =  rankPanelGridFont;
 //			playerdist.text = p.distance.ToString();
 //			playerdist.MakePixelPerfect();
 //			playerdist.gameObject.AddComponent<UIDragPanelContents>();
 //			playerdist.gameObject.AddComponent<BoxCollider>();
 			
 		}
-		container.GetComponent<UIGrid>().Reposition();
-		//rankPanelTable.GetComponent<UIGrid>().Reposition();
+		rankPanelGrid.GetComponent<UIGrid>().Reposition();
+
 	}
 
+	/*************************************************************************/
 	/* Player Panel */
 	GameObject playerPanelNextBtn;
 	GameObject playerPanelBackBtn;
 	UIPopupListAndInput playerPanelNameInput;
 	UILabel playerPanelInvalidNameLbl;
 
+	// -->> Mode Panel
 	void OnPlayerPanelNextBtn(GameObject go, bool isPressed){
 		// check if empty.
 		if(string.IsNullOrEmpty( playerPanelNameInput.mText) ){
@@ -111,16 +120,49 @@ public class GUICarrier : MonoBehaviour {
 		string username = playerPanelNameInput.mText;
 		playerSystem.OnUserEnterName(username);
 		
-		NGUITools.SetActive(cellPanel, true);
+		NGUITools.SetActive(modePanel, true);
 		NGUITools.SetActive(playerPanel , false);
-		OnReloadCellPanel();
 	}
 
+	// -->> Start Panel
 	void OnPlayerPanelBackBtn(GameObject go, bool isPress){
 		NGUITools.SetActive(startPanel,true);
 		NGUITools.SetActive(playerPanel,false);
 	}
+	/***************************************************************************/
+	/* Mode Panel */
+	GameObject modePanelEndlessBtn;
+	GameObject modePabelRacingBtn;
 
+	enum GameMode { Endless, Racing };
+	GameMode gameMode;
+	void OnModePanelEndlessBtn(GameObject go,bool isPress){
+		gameMode = GameMode.Endless;
+		NGUITools.SetActive(cellPanel,true);
+		NGUITools.SetActive(modePanel,false);
+		OnReloadCellPanel();	
+	}
+	void OnModePanelRacingBtn(GameObject go, bool isPress){
+		gameMode = GameMode.Racing;
+		NGUITools.SetActive(cellPanel,true);
+		NGUITools.SetActive(modePanel,false);
+		OnReloadCellPanel();
+	}
+	void OnModePanelBackBtn(GameObject go, bool isPress){
+		NGUITools.SetActive(playerPanel,true);
+		NGUITools.SetActive(modePanel,false);
+	}
+
+	/***************************************************************************/
+	/* Racing Panel */
+	public void OnRacingOver(){
+		NGUITools.SetActive(overPanel,true);
+		NGUITools.SetActive(racingPanel,false);
+		background.GetComponent<UISprite>().enabled = true;
+		overPanelDistanceLbl.text = gameObject.GetComponent<RacingUi>().getAchievement();
+	}
+
+	/***************************************************************************/
 	/* Game Panel */
 	UILabel overPanelDistanceLbl;
 	public void OnGameOver(float distance){
@@ -129,24 +171,27 @@ public class GUICarrier : MonoBehaviour {
 		background.GetComponent<UISprite>().enabled = true;
 		overPanelDistanceLbl.text = Mathf.FloorToInt(distance).ToString();
 	}
-	
+	/***************************************************************************/
 	/* Cell Panel */
 	GameObject cellPanelStartBtn;
 
 	GameObject cellPanelToy2;
 	GameObject cellPanelToy3;
 
-	const int secondThreshold = 20;
-	const int thirdThreshold  = 50;
+	const int secondThreshold = 99;
+	const int thirdThreshold  = 999;
 	void OnReloadCellPanel(){
-		//cellPanelToy2.SetActive(false);
+		//if(gameMode == GameMode.Racing){
+		//	return;
+		//}
+
+		/* Endless Mode */
 		if( playerSystem.curPlayer == null){
 			Debug.LogError("OnReloadCellPanel: didn't find current player");
 			return;
 		}
 
 		int curPlayerDist = playerSystem.curPlayer.distance;
-
 		if( curPlayerDist >= secondThreshold){
 			cellPanelToy2.transform.FindChild("Lock").gameObject.SetActive(false);
 			cellPanelToy2.transform.FindChild("Cell").gameObject.SetActive(true);
@@ -172,43 +217,52 @@ public class GUICarrier : MonoBehaviour {
 	}
 	void OnCellPanelToy1(GameObject go, bool isPressed){
 		OnCellPanelStart(0);
-
 	}
 	void OnCellPanelToy2(GameObject go, bool isPressed){
 		OnCellPanelStart(1);
-	
 	}
 	void OnCellPanelToy3(GameObject go, bool isPressed){
 		OnCellPanelStart(2);
 	}
 
 	void OnCellPanelStart(int toynumber){
-		//Application.LoadLevel("scene1");
+
+		if(gameMode == GameMode.Racing){
+			NGUITools.SetActive(racingPanel,true);
+			NGUITools.SetActive(cellPanel,false);
+			background.GetComponent<UISprite>().enabled = false;
+			UILight.light.enabled = false;
+			gameObject.GetComponent<RacingUi>().OnRacingStart();
+			scriptCarrier.SendMessage("StartGame", toynumber);
+			return;
+		}
+
 		NGUITools.SetActive(gamePanel,true);
 		NGUITools.SetActive(cellPanel,false);
-		gameObject.GetComponent<MainUi>().OnGameStart();
-
-		scriptCarrier.SendMessage("StartGame", toynumber);
 		background.GetComponent<UISprite>().enabled = false;
-
 		UILight.light.enabled = false;
 
-	}
-	void OnCellPanelBackBtn(GameObject go, bool isPressed){
-		NGUITools.SetActive(playerPanel,true);
-		NGUITools.SetActive(cellPanel,false);
+		gameObject.GetComponent<MainUi>().OnGameStart();
+		scriptCarrier.SendMessage("StartGame", toynumber);
+	
 	}
 
+	void OnCellPanelBackBtn(GameObject go, bool isPressed){
+		NGUITools.SetActive(modePanel,true);
+		NGUITools.SetActive(cellPanel,false);
+	}
+	/***************************************************************************/
 	/* Over Panel */
 	GameObject overPanelTryAgainBtn;
 	GameObject overPanelMenuBtn;
 	GameObject overPanelRankBtn;
 	GameObject overPanelExitBtn;
-	
+
+	// -->> Mode Panel
 	void OnOverPanelTryAgainBtn(GameObject go, bool isPressed){
 
 		NGUITools.SetActive(overPanel,false);
-		NGUITools.SetActive(cellPanel,true);
+		NGUITools.SetActive(modePanel,true);
 		OnReloadCellPanel();
 		UILight.light.enabled = true;
 
@@ -230,7 +284,7 @@ public class GUICarrier : MonoBehaviour {
 
 		Application.Quit();
 	}
-
+	/***************************************************************************/
 	// Use this for initialization
 	void Start () {
 
@@ -244,7 +298,7 @@ public class GUICarrier : MonoBehaviour {
 
 		rankPanelBackBtn = rankPanel.transform.FindChild("BackBtn").gameObject;
 		UIEventListener.Get (rankPanelBackBtn).onPress = OnRankPanelBackBtn;
-		rankPanelTable = rankPanel.transform.FindChild("Table").gameObject;
+		rankPanelGrid = rankPanel.transform.FindChild("Table/Grid").gameObject;
 
 		playerPanelNextBtn = playerPanel.transform.FindChild("NextBtn").gameObject;
 		playerPanelBackBtn = playerPanel.transform.FindChild("BackBtn").gameObject;
@@ -254,9 +308,12 @@ public class GUICarrier : MonoBehaviour {
 		UIEventListener.Get (playerPanelNextBtn).onPress = OnPlayerPanelNextBtn;
 		UIEventListener.Get (playerPanelBackBtn).onPress = OnPlayerPanelBackBtn;
 	
-		//cellPanelStartBtn = cellPanel.transform.FindChild("StartBtn").gameObject;
+		modePanelEndlessBtn = modePanel.transform.FindChild("EndlessBtn").gameObject;
+		modePabelRacingBtn	= modePanel.transform.FindChild("RacingBtn").gameObject;
+		UIEventListener.Get (modePanelEndlessBtn).onPress = OnModePanelEndlessBtn;
+		UIEventListener.Get (modePabelRacingBtn).onPress  = OnModePanelRacingBtn;
+
 		GameObject cellPanelBackBtn = cellPanel.transform.FindChild("BackBtn").gameObject;
-		//UIEventListener.Get(cellPanelStartBtn).onPress = OnCellPanelStartBtn;
 		UIEventListener.Get(cellPanelBackBtn).onPress  = OnCellPanelBackBtn;
 
 		GameObject cellPanelToy1 = cellPanel.transform.FindChild("Toy1").gameObject;

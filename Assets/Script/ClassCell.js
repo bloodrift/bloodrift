@@ -198,7 +198,8 @@ public class Cell{
 		camPos += rotation * (posOff);
 		position += rotation * posOff;
 		camRot = Quaternion.LookRotation(position - camPos, up);
-		rotation = rotation * ESelfRot;
+	//	rotation = rotation * ESelfRot;
+		rotation = rotation * Quaternion.AngleAxis(posOff.magnitude * 270, Vector3(posOff.y, -posOff.x, 0));
 		if(instance != null){
 			instance.transform.position = position;
 			instance.transform.rotation = rotation;

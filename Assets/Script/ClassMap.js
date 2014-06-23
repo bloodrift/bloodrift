@@ -33,7 +33,7 @@ public class Map{
 		map = new Array();
 		lastPoint = Vector3.zero;
 		lastRotation = Quaternion(0, 0, 0, 1);
-s		if(Global.GameMode == Global.GameModeEndless){
+		if(Global.GameMode == Global.GameModeEndless){
 			lastModRotation = 0;
 			vesselOff = 0;
 			VirusLevel = 1;
@@ -460,15 +460,15 @@ s		if(Global.GameMode == Global.GameModeEndless){
 				
 			case 1 :
 				vess = new Vessel(type, lastPoint, rot, lastRotation, 1);
-				vess.SetProperty(3, 29);
+				vess.SetProperty(3, 30);
 				break;
 			case 3 :
 				vess = new Vessel(type, lastPoint, rot, lastRotation, 1);
-				vess.SetProperty(5, 29);
+				vess.SetProperty(5, 30);
 				break;
 			case 5 :
 				vess = new Vessel(type, lastPoint, rot, lastRotation, 2);
-				vess.SetProperty(6, 29);
+				vess.SetProperty(6, 30);
 				break;
 			default :
 				break;
