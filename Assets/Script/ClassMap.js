@@ -13,6 +13,7 @@ public class Map{
 	public var AICells : Array;
 	
 	public var CircleNum : int;
+	public var DisPerCircle : float;
 	//paras for random map generation
 	public var curVesselRadius : float;
 	public var numOfBT : int;
@@ -48,6 +49,7 @@ public class Map{
 			cam = new Cell(42, 0, Global.MainVessel, map, vesselOff);
 		}
 		if(Global.GameMode == Global.GameModeRace){
+			DisPerCircle = 0;
 			InitMap1();
 			player = new Cell(Global.typeRedCell, Global.RedCellRadius, 0, map, vesselOff);
 			cam = new Cell(42, 0, 0, map, vesselOff);
@@ -313,9 +315,30 @@ public class Map{
 		return Mathf.Floor(x * num);
 	}
 	
+	public function Progress() : float{
+		return (player.distance - (CircleNum - 1) * DisPerCircle) / DisPerCircle;
+	}
+	
+	public function Rank() : int {
+		var rank : int = 1;
+		for (var i = 0; i < AICells.length; ++i){
+			var cell : Cell = AICells[i];
+			if(cell.distance > player.distance){
+				rank += 1;
+			}
+		}
+		return rank;
+	}
+	
 	private function RandomGenerateAICell(cellType : int, speed : float){
 		//add new AICell
 		var newcell : Cell = AddAICell(cellType, rand(4));
+		var vess : Vessel;
+		for(var i = 0; i < newcell.curVess; ++i){
+			vess = map[i];
+			newcell.distance += vess.vessLength;
+		}
+		newcell.distance += newcell.centPos;
 		newcell.speed = speed;
 	}
 	
@@ -499,7 +522,7 @@ public class Map{
 		lastPoint = vess.endPoint;
 		lastRotation = vess.endRotation;
 		lastModRotation += vess.modRotation;
-
+		DisPerCircle += vess.vessLength;
 		return vess;
 	}
 	private function MapAdd(type : int, time : int, rot : float){
