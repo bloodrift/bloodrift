@@ -398,7 +398,7 @@ public class UIPopupListAndInput : MonoBehaviour
 		}
 	}
 
-	public string caratChar = "|";
+	public string caratChar = "/";
 	public string mText;
 
 	void OnInput(string ch){

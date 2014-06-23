@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class GUICarrier : MonoBehaviour {
 
+	public AudioSystem audioSystem;
 	public PlayerSystem playerSystem;
 	public GameObject scriptCarrier;
 
@@ -160,6 +161,8 @@ public class GUICarrier : MonoBehaviour {
 		NGUITools.SetActive(racingPanel,false);
 		background.GetComponent<UISprite>().enabled = true;
 		overPanelDistanceLbl.text = gameObject.GetComponent<RacingUi>().getAchievement();
+
+		audioSystem.OnGameOver();
 	}
 
 	/***************************************************************************/
@@ -170,6 +173,8 @@ public class GUICarrier : MonoBehaviour {
 		NGUITools.SetActive(gamePanel,false);
 		background.GetComponent<UISprite>().enabled = true;
 		overPanelDistanceLbl.text = Mathf.FloorToInt(distance).ToString();
+
+		audioSystem.OnGameOver();
 	}
 	/***************************************************************************/
 	/* Cell Panel */
@@ -234,6 +239,7 @@ public class GUICarrier : MonoBehaviour {
 			UILight.light.enabled = false;
 			gameObject.GetComponent<RacingUi>().OnRacingStart();
 			scriptCarrier.SendMessage("StartGame", toynumber);
+			audioSystem.OnGameStart();
 			return;
 		}
 
@@ -244,7 +250,7 @@ public class GUICarrier : MonoBehaviour {
 
 		gameObject.GetComponent<MainUi>().OnGameStart();
 		scriptCarrier.SendMessage("StartGame", toynumber);
-	
+		audioSystem.OnGameStart();
 	}
 
 	void OnCellPanelBackBtn(GameObject go, bool isPressed){
@@ -288,6 +294,7 @@ public class GUICarrier : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
+		audioSystem = GameObject.Find("AudioSystem").GetComponent<AudioSystem>();
 		playerSystem = GameObject.Find("PlayerSystem").GetComponent<PlayerSystem>();
 		scriptCarrier = GameObject.Find ("ScriptCarrier");
 		
