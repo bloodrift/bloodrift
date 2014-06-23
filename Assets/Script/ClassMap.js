@@ -7,7 +7,6 @@ public class Map{
 	public var lastModRotation : float;
 	public var player : Cell;	
 	public var cam : Cell;
-	public var collisionEffect : GameObject;
 	public var vesselOff : int;
 	public var newVessel : int;
 	public var newCell : int;
@@ -38,10 +37,10 @@ public class Map{
 			vesselOff = 0;
 			VirusLevel = 1;
 			for (var i = 0; i < 7; ++i){
-				AddVessel(0);
+				AddVessel(0, 0);
 			}
 			for (var j = 0; j < 3; ++j){
-				AddVessel(1);
+				AddVessel(1, 45 * (rand(3) - 1));
 			}
 			curVesselRadius = 1;
 			player = new Cell(Global.typeRedCell, Global.RedCellRadius, Global.MainVessel, map, vesselOff);
@@ -51,8 +50,16 @@ public class Map{
 			InitMap1();
 			player = new Cell(Global.typeRedCell, Global.RedCellRadius, 0, map, vesselOff);
 			cam = new Cell(42, 0, 0, map, vesselOff);
+			AICells = new Array();	
+			RandomGenerateAICell(Global.typeBubble, 0);
+			RandomGenerateAICell(Global.typeBubble, 0);
+			RandomGenerateAICell(Global.typeBigBubble, 0);
+			RandomGenerateAICell(Global.typeBigBubble, 0);
+			RandomGenerateAICell(Global.typeTriangleCell, 0);
+			RandomGenerateAICell(Global.typeWhiteCell, 0);
+			RandomGenerateAICell(Global.typeRedCell, 0);
 		}
-	//	AICells = new Array();
+		
 	}
 	
 	public function EMove(time : float){
@@ -77,14 +84,19 @@ public class Map{
 		if (player.centPos > vess.vessLength){
 			AbandonVessel();
 			RandomGenerateVessel();
-			vess = SwitchToNextVessel(player, vess);
+			vess = ESwitchToNextVessel(player, vess);
 		}
 		//move
 		var aimPosOff = Global.EPosition2PosOff(player.EPosition);
 		player.posOff += (aimPosOff - player.posOff) * Global.EShiftSpeed * time;
-		if(player.BoundCheck(vess, true)){
-			collisionEffect.transform.position = player.CEposition;
-			collisionEffect.transform.rotation = player.CErotation;
+		if(Global.GameStart){
+			if(player.BoundCheck(vess, true)){
+				player.CollisionEffect.transform.position = player.CEposition;
+				player.CollisionEffect.transform.rotation = player.CErotation;
+			}
+			else {
+			//	player.CollisionEffect.transform.position = Vector3(-100, -100, -100);
+			}
 		}
 		player.ESelfRot *= Quaternion.AngleAxis(time * Global.ESelfRotSpeed, player.ESelfRotDirection);
 		player.EUpdatePos(vess);	
@@ -171,17 +183,10 @@ public class Map{
 		}
 	}
 	
-	public function Move(cell : Cell, time : float, index : int){
-		if(cell.curVess - vesselOff < Global.MainVessel - 1){
-			// modified by snowson
-			GameObject.Destroy(cell.instance);
-			AICells.RemoveAt(index);
-		}
-		if(cell.curVess - vesselOff > Global.VesselNum - 1){
-			return;
-		}
-		var vess : Vessel = map[cell.curVess - vesselOff];
+	public function RMove(cell : Cell, time : float){
+		var vess : Vessel = map[cell.curVess];
 		//beneth is a unclear model, we can modify it later
+		//calculateSpeed
 		var rots = cell.RealRotate() * Mathf.PI / 180.0;
 		var speedModifier : float = 1;
 		if(vess.vessType%2 != 0){
@@ -205,30 +210,22 @@ public class Map{
 		if(Global.GameStart){
 			cell.distance += nextPos - cell.centPos;
 			cell.Shift(vess, time, cell == player);
+			cell.UpdateSpeed(time);
 		}
-		if(cell == player){
-			cell.speed = Mathf.Log(cell.distance + 8);
-			if(cell.CEshow){
-				collisionEffect.transform.position = cell.CEposition;
-				collisionEffect.transform.rotation = cell.CErotation;
-			}
+	
+		if(cell.CEshow){
+			cell.CollisionEffect.transform.position = cell.CEposition;
+			cell.CollisionEffect.transform.rotation = cell.CErotation;
+		}
+		else {
+			cell.CollisionEffect.transform.position = Vector3(-100, -100, -100);
 		}
 			
 		cell.centPos = nextPos;
 		// go to the next vessel--------------------------
 
 		if (cell.centPos > vess.vessLength){
-					//destroy the vessels
-			if(cell == player){
-				AbandonVessel();
-				RandomGenerateVessel();
-				
-				RandomGenerateAICell(Global.typeBubble, cell.speed / 2);
-				RandomGenerateAICell(Global.typeBubble, cell.speed / 2);
-				if(AICells.length % 2 == 0)
-					RandomGenerateAICell(Global.typeBigBubble, cell.speed / 2);
-			}
-			vess = SwitchToNextVessel(cell, vess);
+			vess = RSwitchToNextVessel(cell, vess);
 		}
 		//-----------------------------------
 		cell.RUpdatePos(vess);	
@@ -260,6 +257,10 @@ public class Map{
 		cell.posForce = sf;
 	}
 	
+	public function SetAccelerateForce(cell : Cell, af : float){
+		cell.AccelerateForce = af;
+	}
+	
 	public function AbandonVessel(){
 		var oldVess : Vessel = map[0];
 		var item : BloodItem;
@@ -274,7 +275,7 @@ public class Map{
 		vesselOff += 1;
 	}
 	
-	public function SwitchToNextVessel(cell : Cell, vess : Vessel) : Vessel{
+	public function ESwitchToNextVessel(cell : Cell, vess : Vessel) : Vessel{
 		cell.centPos -= vess.vessLength;
 		cell.curVess += 1;
 		// at the end
@@ -282,6 +283,20 @@ public class Map{
 		cell.rotateAngle -= vess.modRotation;
 		return vess;
 	}
+	
+	public function RSwitchToNextVessel(cell : Cell, vess : Vessel) : Vessel{
+		cell.centPos -= vess.vessLength;
+		cell.curVess += 1;
+		if(cell.curVess == map.length){
+			cell.curVess = 0;
+		}
+		// at the end
+		vess = map[cell.curVess];
+		cell.rotateAngle -= vess.modRotation;
+		return vess;
+	}
+	
+	
 	
 	private function rand(num : int): int{
 		var x = Random.value;
@@ -292,9 +307,8 @@ public class Map{
 	
 	private function RandomGenerateAICell(cellType : int, speed : float){
 		//add new AICell
-		var newcell : Cell = AddAICell(cellType, 6 + vesselOff);
+		var newcell : Cell = AddAICell(cellType, rand(4));
 		newcell.speed = speed;
-		newCell++;
 	}
 	
 	
@@ -307,7 +321,7 @@ public class Map{
 		else x = rand(1) * (rand(2) * 2 + 1);
 		if (x % 2 != 0)
 			numOfBT += 1;
-		vess = AddVessel(x);
+		vess = AddVessel(x, 45 * (rand(3) - 1));
 		if(!Global.GameStart)
 			return;
 		//-------------generate items-----------------------//
@@ -437,8 +451,7 @@ public class Map{
 		return cell;
 	}
 
-	public function AddVessel(type: int) : Vessel{
-		var rot = 45 * (rand(3) - 1);
+	public function AddVessel(type: int, rot : float) : Vessel{
 		var vess : Vessel;
 		switch (type){
 			case 0 :
@@ -481,8 +494,44 @@ public class Map{
 
 		return vess;
 	}
+	private function MapAdd(type : int, time : int, rot : float){
+		for(var i = 0; i < time; ++i){
+			AddVessel(type, rot);
+			rot= 0;
+		}
+	}
 	
 	private function InitMap1(){
+		MapAdd(0, 5, 0);
+		MapAdd(2, 1, 0);
+		MapAdd(4, 4, 0);
+		//
+		MapAdd(5, 6, 0);
+		//
+		MapAdd(4, 4, 0);
+		MapAdd(6, 1, 0);
+		MapAdd(0, 5, 0);
+		//
+		MapAdd(3, 6, 90);
+		//
+		MapAdd(0, 15, 0);
+		//
+		MapAdd(1, 6, -90);
+		//
+		MapAdd(0, 5, 0);
+		MapAdd(2, 1, 0);
+		MapAdd(4, 4, 0);
+		MapAdd(6, 1, 0);
+		MapAdd(0, 7, 0);
+		//
+		MapAdd(1, 6, 0);
+		MapAdd(3, 6, 90);
+		//
+		MapAdd(2, 1, 0);
+		//
+		MapAdd(5, 6, -90);
+		MapAdd(6, 1, 0);
+		MapAdd(0, 7, 0);
 	}
 
 }

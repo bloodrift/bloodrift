@@ -60,13 +60,20 @@ static public class Global{
 	public var ERushSpeed : float = 15; 	
 
  	public var maxShiftSpeed : float = 3;
- 	public var maxShiftForce : float = 12;
+ 	public var maxShiftForce : float = 6;
  	public var shiftDragForce : float = 3;
  	public var gravity : float = 0.6;
+ 	
+ 	public var RMaxMoveSpeed : float = 7;
+ 	public var RMaxMoveSpeedAtCross : float = 5;
+ 	public var RMaxAccelerateForce : float = 1.5;
+ 	public var RMaxAccelerateDrag : float = -RMaxAccelerateForce;
+ 	
+ 	public var RBrakeForce : float = -5;
 
  	public var typeRedCell : int = 0;
  	public var RedCellRadius : float = 0.1;
-	
+ 	
 	public var typeWhiteCell : int = 1;
 	public var WhiteCellRadius : float = 0.12;
 	
@@ -81,7 +88,7 @@ static public class Global{
 	
 	public var typeATP : int = 0;
 	public var ATPgap : float = 0.5;
-	public var ATPradius : float = 0.2;
+	public var ATPradius : float = 0.15;
 	
 	public var typeVIRUS : int = 1;
 	public var VIRUSradius : float = 0.15;
@@ -90,7 +97,7 @@ static public class Global{
 	public var HEMOradius : float = 0.25;
 	
 	public var boundFactor : float = 0.2;
-	public var visibleRange : float = 5;
+	public var visibleRange : float = 1;
 	public var AIActPerFrame : int = 5;
 	
 	public function EPosition2PosOff(epos : int) : Vector3{
@@ -128,7 +135,15 @@ static function getScore(){
 	return vesselMap.player.energy;
 }
 
-function StartGame(playerType : int){
+function StartGameModeRacing(playerType : int){
+	Global.GameMode = Global.GameModeRace;
+	ClearMap();
+	for (var i = 0; i < vesselMap.map.length; ++ i){
+		InstantiateVessel(vesselMap.map[i]);
+	}
+	for (i = 0 ; i < vesselMap.AICells.length; i++){
+		InstantiateCell(vesselMap.AICells[i]);
+	}
 	Global.GameStart = true;
 	Global.GameOver = false;
 	switch (playerType){
@@ -143,6 +158,27 @@ function StartGame(playerType : int){
 			break;	
 	}
 	InstantiateCell(vesselMap.player);
+	vesselMap.cam.instance = CAM;
+}
+
+function StartGameModeEndless(playerType : int){
+	Global.GameMode = Global.GameModeEndless;
+	ClearMap();
+	Global.GameStart = true;
+	Global.GameOver = false;
+	switch (playerType){
+		case Global.typeRedCell :
+			vesselMap.player = new Cell(Global.typeRedCell, Global.RedCellRadius, vesselMap.player.curVess, vesselMap.map, vesselMap.vesselOff);
+			break;
+		case Global.typeWhiteCell :
+			vesselMap.player = new Cell(Global.typeWhiteCell, Global.WhiteCellRadius, vesselMap.player.curVess, vesselMap.map, vesselMap.vesselOff);
+			break;
+		case Global.typeTriangleCell :
+			vesselMap.player = new Cell(Global.typeTriangleCell, Global.TriangleCellRadius, vesselMap.player.curVess, vesselMap.map, vesselMap.vesselOff);
+			break;	
+	}
+	InstantiateCell(vesselMap.player);
+	vesselMap.cam.instance = CAM;
 }
 
 function GameOver(distance : float){
@@ -154,14 +190,6 @@ function Start(){
 	PlayerSystem = GameObject.Find("PlayerSystem");
 	var cell : Cell = vesselMap.cam;
 	cell.instance = CAM;
-	vesselMap.collisionEffect = Instantiate(COLLOSION, Vector3(-100, -100, -100), Quaternion(0, 0, 0, 1));
-
-	if(Global.GameMode == Global.GameModeRace){
-		for (var i = 0 ; i < vesselMap.AICells.length; i++){
-			cell = vesselMap.AICells[i];
-			InstantiateCell(cell);
-		}
-	}
 }
 
 function InstantiateCell(cell : Cell){
@@ -184,6 +212,7 @@ function InstantiateCell(cell : Cell){
 		default:
 			break;
 	}
+	cell.CollisionEffect = Instantiate(COLLOSION, Vector3(-100, -100, -100), Quaternion(0, 0, 0, 1));
 }
 
 function InstantiateVessel(vess : Vessel){
@@ -228,7 +257,7 @@ function InstantiateVessel(vess : Vessel){
 }
 
 static var rotateForce : float;
-static var moveSpeed : float;
+static var RMoveForce : float;
 static var lrSpeed : float = 0;
 static var udSpeed : float = 0;
 static var frameCount : int = Global.AIActPerFrame - 1;
@@ -271,11 +300,6 @@ function Update(){
 		}
 	}
 	if(Global.GameMode == Global.GameModeRace){
-		while(vesselMap.newCell > 0){
-			InstantiateCell(vesselMap.AICells[vesselMap.AICells.length - vesselMap.newCell]);
-			vesselMap.newCell -= 1;
-		}
-		
 		if(Input.GetKeyDown(KeyCode.A)){
 			lrSpeed = -Global.maxShiftForce;
 		}
@@ -304,6 +328,20 @@ function Update(){
 			if(udSpeed == -Global.maxShiftForce)
 				udSpeed = 0;
 		}
+		if(Input.GetKeyDown(KeyCode.J)){
+			RMoveForce += Global.RMaxAccelerateForce;
+		}
+		if(Input.GetKeyUp(KeyCode.J)){
+			RMoveForce -= Global.RMaxAccelerateForce;
+		}
+		if(Input.GetKeyDown(KeyCode.K)){
+			RMoveForce += Global.RMaxAccelerateDrag;
+		}
+		if(Input.GetKeyUp(KeyCode.K)){
+			RMoveForce -= Global.RMaxAccelerateDrag;
+		}
+		Debug.Log(vesselMap.player.speed);
+		vesselMap.SetAccelerateForce(vesselMap.player, RMoveForce);
 		vesselMap.SetShiftForce(vesselMap.player, Vector3(lrSpeed, udSpeed, 0));
 		if(Input.GetKeyDown(KeyCode.Space)){
 			vesselMap.Rush(vesselMap.player);
@@ -311,13 +349,13 @@ function Update(){
 		
 		frameCount = (frameCount + 1) % Global.AIActPerFrame;
 		if(frameCount == 0)
-			AICompute(vesselMap.AICells, vesselMap.player, vesselMap.map, vesselMap.vesselOff);	
+			AICompute(vesselMap.AICells, vesselMap.player, vesselMap.map);	
 	
-		vesselMap.Move(vesselMap.player, Time.deltaTime, 0);
+		vesselMap.RMove(vesselMap.player, Time.deltaTime);
 		var cell : Cell;
 		for (var i = vesselMap.AICells.length - 1; i >=0 ; --i){
 			cell = vesselMap.AICells[i];
-			vesselMap.Move(cell, Time.deltaTime, i);
+			vesselMap.RMove(cell, Time.deltaTime);
 		}
 	}
 	
@@ -329,74 +367,98 @@ public function ClearAICells(cells : Array){
 	var cell : Cell;
 	for(var i = cells.length - 1; i >= 0 ; --i){
 		cell = cells[i];
+		Destroy(cell.CollisionEffect);
 		Destroy(cell.instance);
 		cells.RemoveAt(i);
 	}
 }
 
-public function AICompute(cells : Array, mainCell : Cell, map : Array, vesselOff : int){
-	var totalPosOff : Vector3 = mainCell.posOff;
-	var aimPosOff : Vector3;
-	var cell : Cell;
-	var vess : Vessel;
+public function ClearMap(){
+	for (var i = vesselMap.map.length -1; i >= 0; --i){
+		var oldVess : Vessel = vesselMap.map[i];
+		var item : BloodItem;
+		for(var j = 0; j < oldVess.items.length; ++j){
+			item = oldVess.items[j];
+			GameObject.Destroy(item.instance, 0);
+		}
+		GameObject.Destroy(oldVess.instance, 0);
+		vesselMap.map.RemoveAt(i);
+	}
+	if(vesselMap.AICells != null){
+		ClearAICells(vesselMap.AICells);
+	}
+	if(vesselMap.player.instance != 0){
+		Destroy(vesselMap.player.instance);
+		Destroy(vesselMap.player.CollisionEffect);
+	}
+	vesselMap = new Map();
+}
+
+public function AICompute(cells : Array, mainCell : Cell, map : Array){
+	var cell : Cell; 
 	var otherCell : Cell;
-	var dis : float;
-	var edgeDis : float;
-	var count : int;
-	var posOff : Vector3;
-	for(var i = 0; i < cells.length; ++i){
+	var edgeForce = Vector3.zero;
+	var shiftRotForce = Vector3.zero;
+	var midForce = Vector3.zero;
+	var cellForce = Vector3.zero;
+	var centerForce = Vector3.zero;
+	for (var i = 0; i < cells.length; ++i){
 		cell = cells[i];
-		totalPosOff = Vector3.zero;
-		count = 0;
-		vess = map[cell.curVess - vesselOff];
-		// check for other cells
+		var vess : Vessel = map[cell.curVess];
+		var nextVess : Vessel = map[(cell.curVess + 1) % map.length];
+		//
+		centerForce = cell.posOff / 4;
+		//BoundCheck
+		var curRadius = vess.GetRadius(cell.centPos);
+		var dis = Mathf.Max(cell.EdgeDistance(vess) / (curRadius * curRadius), 0.12);
+		if(dis < 0.7 * curRadius){
+			edgeForce = -cell.posOff.normalized / (100 * (dis - 0.1) * (dis - 0.1));
+		}
+		//In Cross Vessel
+		vesselMap.SetAccelerateForce(cell, Global.RMaxAccelerateForce);
+		if (vess.vessType%2 != 0 || nextVess.vessType % 2 != 0){
+			if(cell.speed > Global.RMaxMoveSpeedAtCross){
+				vesselMap.SetAccelerateForce(cell, Global.RMaxAccelerateDrag);
+			}
+			if(vess.vessType%2 != 0){
+				shiftRotForce = -(Quaternion.AngleAxis(-cell.rotateAngle, Vector3(0, 0, 1)) * Vector3(0, 1, 0));	
+				if(Vector3.Dot(cell.posOff , shiftRotForce) > 0.1)
+					shiftRotForce = Vector3.zero;
+			}
+		} 
+		//check for 2 to 1 vessel
+		if( vess.vessType == 6)
+			midForce = -(cell.posOff - cell.posOff.normalized);
+		//	check for other cells
 		for(var j = 0; j < cells.length ; ++j){
 			otherCell = cells[j];
-			dis = Mathf.Max(Vector3.Distance(cell.position, otherCell.position), 0.1);
+			dis = Mathf.Max(Vector3.Distance(cell.position, otherCell.position), 0.3);
 			if( dis < Global.visibleRange){
-				totalPosOff += (cell.posOff - otherCell.posOff).normalized / (1 * dis);
-				count ++;
+				var posOff = (otherCell.posOff - cell.posOff).normalized;
+				cellForce += -posOff / (10 * (dis - 0.2));
 				if(cell.OnCollision(otherCell)){
-					posOff = (otherCell.posOff - cell.posOff).normalized;
-					cell.posSpeed += -2 * posOff.normalized / 2; 
-					otherCell.posSpeed += 2 * posOff.normalized / 2;
+					cell.posSpeed += posOff.normalized / 2; 
+					otherCell.posSpeed += posOff.normalized / 2;
 				}
 			}
 		}
-		dis = Mathf.Max(Vector3.Distance(cell.position, mainCell.position), 0.1);
+		dis = Mathf.Max(Vector3.Distance(cell.position, mainCell.position), 0.3);
 		if(dis < Global.visibleRange){
-			var playerPosOff = (cell.posOff - mainCell.posOff).normalized / (5 * dis);
+			posOff = (mainCell.posOff - cell.posOff).normalized;
+			cellForce += -posOff / (10 * (dis - 0.2));
 			if(cell.OnCollision(mainCell)){
-				posOff = (mainCell.posOff - cell.posOff).normalized;
-		//		cell.posSpeed += -1.5 * (mainCell.posSpeed.magnitude + 1)/ Global.maxShiftSpeed * posOff.normalized / 2; 
-		//		mainCell.posSpeed += 1.5 * (cell.posSpeed.magnitude + 1)/ Global.maxShiftSpeed * posOff.normalized / 2;
-				cell.posSpeed += -2 * posOff.normalized / 2; 
+				cell.posSpeed += posOff.normalized / 2; 
 				mainCell.posSpeed += posOff.normalized / 2;
 			}
 		}
-	
-		//check for bound
-		var curRadius = vess.GetRadius(cell.centPos);
-		dis = Mathf.Max(cell.EdgeDistance(vess) / (curRadius * curRadius), 0.12);
-		if(dis < 0.65 * curRadius){
-			var edgePosOff : Vector3 = - cell.posOff / (100 *  (dis - 0.1) * (dis - 0.1));
-		}
-		//final compute
-		if (vess.vessType%2 != 0)
-			var shiftRotForce : Vector3 = (2 * Global.shiftDragForce + cell.speed / Global.rushSpeed* (Global.maxShiftForce - Global.shiftDragForce)) * (Quaternion.AngleAxis(-cell.rotateAngle, Vector3(0, 0, 1)) * Vector3(0, 1, 0));
 			
-		if( vess.vessType == 6)
-			var midForce = -(cell.posOff - cell.posOff.normalized);	
-		
-	//	totalPosOff = (totalPosOff / count) + edgePosOff - shiftRotForce / Global.maxShiftForce;
-	//	totalPosOff = (totalPosOff / count) - shiftRotForce / Global.maxShiftForce;
-	//	totalPosOff = - shiftRotForce / Global.maxShiftForce;
-	//	totalPosOff = edgePosOff - shiftRotForce / Global.maxShiftForce;
-		totalPosOff = edgePosOff + midForce + (totalPosOff / count) + playerPosOff;
+		var totalPosOff = edgeForce + midForce + shiftRotForce + cellForce;
+	//	var totalPosOff = edgeForce;
 		if(totalPosOff.sqrMagnitude > 1)
 			totalPosOff = totalPosOff.normalized;
 		cell.posForce = Global.maxShiftForce * totalPosOff;
 	}
+	
 }
 
 	

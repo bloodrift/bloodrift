@@ -233,7 +233,7 @@ public class GUICarrier : MonoBehaviour {
 			background.GetComponent<UISprite>().enabled = false;
 			UILight.light.enabled = false;
 			gameObject.GetComponent<RacingUi>().OnRacingStart();
-			scriptCarrier.SendMessage("StartGame", toynumber);
+			scriptCarrier.SendMessage("StartGameModeRacing", toynumber);
 			return;
 		}
 
@@ -243,7 +243,7 @@ public class GUICarrier : MonoBehaviour {
 		UILight.light.enabled = false;
 
 		gameObject.GetComponent<MainUi>().OnGameStart();
-		scriptCarrier.SendMessage("StartGame", toynumber);
+		scriptCarrier.SendMessage("StartGameModeEndless", toynumber);
 	
 	}
 

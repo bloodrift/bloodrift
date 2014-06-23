@@ -12,16 +12,17 @@ public class Cell{
 	
 	public var centPos : float;
 	public var curVess : int;
-	public var speed : float;
 	public var rotateAngle : float;
 	
 	//paras for rot
 	public var selfRot : Quaternion;
-	
 	public var ESelfRot : Quaternion; 
 	public var ESelfRotDirection : Vector3;
 	
 	//paras for drift mode
+	public var speed : float;
+	public var AccelerateForce : float;
+	
 	public var posOff : Vector3;
 	public var posSpeed : Vector3;
 	public var posForce : Vector3;
@@ -47,6 +48,8 @@ public class Cell{
 	public var CErotation : Quaternion;
 	public var CEshow : boolean;
 	
+	public var CollisionEffect : GameObject;
+	
 
 	public function Cell(type : int, rd : float, cv : int, map : Array, vesselOff : int){
 		cellType = type;
@@ -67,6 +70,18 @@ public class Cell{
 		energy = 0;
 		distance = 0;
 		onRush = false;
+	}
+	
+	public function RDragForce() : float{
+		return Mathf.Pow(speed / Global.RMaxMoveSpeed, 2) * Global.RMaxAccelerateDrag;
+	}
+	
+	public function UpdateSpeed(time : float){
+		var drag = RDragForce();
+		speed += (AccelerateForce + drag) * time;
+		if(speed < 0){
+			speed = 0;
+		}
 	}
 	
 	public function ERushSpeed() : float{
@@ -92,7 +107,8 @@ public class Cell{
 	}
 
 	public function shiftDragForce() : float{
-		return posSpeed.sqrMagnitude / 1.5 + 3;
+	//	return posSpeed.sqrMagnitude / 1.5 + 3;
+		return posSpeed.sqrMagnitude / 1.5;
 	}
 	
 	private function CamShift(vess : Vessel, time : float){
@@ -144,8 +160,10 @@ public class Cell{
 			drag = Vector3.zero;
 		else drag = -posSpeed.normalized * shiftDragForce();
 		var shiftRotForce : Vector3 = Vector3.zero;
+	/*	if (vess.vessType%2 != 0)
+			shiftRotForce = (Global.shiftDragForce + speed / Global.RMaxMoveSpeedAtCross * (Global.maxShiftForce - Global.shiftDragForce)) * (Quaternion.AngleAxis(-rotateAngle, Vector3(0, 0, 1)) * Vector3(0, 1, 0));*/
 		if (vess.vessType%2 != 0)
-			shiftRotForce = (1 * Global.shiftDragForce + speed / Global.rushSpeed* (Global.maxShiftForce - Global.shiftDragForce)) * (Quaternion.AngleAxis(-rotateAngle, Vector3(0, 0, 1)) * Vector3(0, 1, 0));
+			shiftRotForce = speed / Global.RMaxMoveSpeedAtCross / vess.radius * Global.maxShiftForce * (Quaternion.AngleAxis(-rotateAngle, Vector3(0, 0, 1)) * Vector3(0, 1, 0));	
 		if(onRush)
 			shiftRotForce += Global.maxShiftForce * - posOff;
 		posSpeed += (drag + posForce + shiftRotForce) * 0.5 * time;
@@ -156,18 +174,14 @@ public class Cell{
 	
 		var cellRadius = getRadiusInDir(vess.GetUpDir(centPos, RealRotate()));
 		if(EdgeDistance(vess) < 0){
-			if(isPlayer){
-				var up = vess.GetUpDir(centPos, RealRotate());
-				CEposition = vess.CentPos2RealPos(centPos) - up * (vess.GetRadius(centPos) - 0.05);
-				CErotation = Quaternion.LookRotation(-vess.CentPos2ForwardDir(centPos), up);
-				CEshow = true;
-			}
+			var up = vess.GetUpDir(centPos, RealRotate());
+			CEposition = vess.CentPos2RealPos(centPos) - up * (vess.GetRadius(centPos) - 0.05);
+			CErotation = Quaternion.LookRotation(-vess.CentPos2ForwardDir(centPos), up);
+			CEshow = true;
 			posOff = (vess.GetRadius(centPos) - cellRadius) * posOff.normalized;
 			var upPos = posOff.normalized;
 			if(Vector3.Dot(posSpeed, upPos) > 0){
-				life -= 3;	
-				if(life < 0)
-					life = 0;
+				speed = 0.8 * speed;	
 				var stridePos = 2 * upPos * Vector3.Dot(posSpeed, upPos);
 				posSpeed -= (0.9 * stridePos + Global.boundFactor * upPos) ; 
 			}
@@ -212,10 +226,12 @@ public class Cell{
 		var rad = vess.GetRadius(centPos);
 		rotation = Quaternion.LookRotation(lookat, up);
 		position = vess.CentPos2RealPos(centPos);
-		camPos = position - 1 * lookat;
-		camPos += rotation * (posOff);
-		position += rotation * posOff;
+		camPos = position - 1.5 * lookat;
+		//	camPos += rotation * (posOff);
+		position += 0.5 * (rotation * posOff);
+
 		camRot = Quaternion.LookRotation(position - camPos, up);
+		position += 0.5 * (rotation * posOff);
 		rotation = rotation * selfRot;
 		
 		if(instance != null){
@@ -225,9 +241,12 @@ public class Cell{
 	}
 	
 	public function getRadiusInDir(dir : Vector3) : double{
-		var rot = rotation * selfRot * Vector3(0, 0, 1);
-		var angle = Vector3.Angle(dir, rot);
-		return Mathf.Sin(angle * Mathf.PI / 180) * radius;
+		if( cellType == Global.typeRedCell || cellType == Global.typeTriangleCell){
+			var rot = rotation * selfRot * Vector3(0, 0, 1);
+			var angle = Vector3.Angle(dir, rot);
+			return Mathf.Sin(angle * Mathf.PI / 180) * radius;
+		}
+		return radius;
 	}
 	
 	public function OnCollision(cell : Cell) : boolean{

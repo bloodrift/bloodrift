@@ -63,7 +63,7 @@ public class RacingUi : MonoBehaviour
 		yield return new WaitForSeconds(2);
 		energyBarTC.enabled = false;
 	}
-	public void OnHitATP(float energy){
+	public void OnHitATPModeRacing(float energy){
 		currentEnergy = energy;
 		float percentage = currentEnergy / totalEnergy;
 		// first time energy is filled
