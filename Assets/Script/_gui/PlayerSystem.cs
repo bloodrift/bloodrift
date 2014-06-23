@@ -39,12 +39,14 @@ public class PlayerSystem : MonoBehaviour{
 	// called when user close the game program.
 	// save all information back to computer system.
 	void savePlayers(){
-		BinaryFormatter b = new BinaryFormatter();
-		MemoryStream m = new MemoryStream();
-		b.Serialize(m, players);
-		PlayerPrefs.SetString("players",Convert.ToBase64String(m.GetBuffer()));
+		if( isPlayersDirty ){
+			BinaryFormatter b = new BinaryFormatter();
+			MemoryStream m = new MemoryStream();
+			b.Serialize(m, players);
+			PlayerPrefs.SetString("players",Convert.ToBase64String(m.GetBuffer()));
 
-		isPlayersDirty = false;
+			isPlayersDirty = false;
+		}
 	}
 
 	// called when the program opened.
@@ -63,16 +65,6 @@ public class PlayerSystem : MonoBehaviour{
 		isPlayersDirty = false; // players are the newest now
 	}
 
-	// a player named <name> play game now.
-	// we have already checked there's no stored player named <name>
-//	void newPlayer(string name){
-//		if(! isLoadPlayers ){
-//			loadPlayers();
-//		}
-//		players.Add(Player.newPlayer(name,0));
-//		isPlayersDirty = true; // players are dirty now;
-//	}
-
 	// find the name from playerlist, or create new player
 	public void OnUserEnterName(String name){
 
@@ -89,10 +81,12 @@ public class PlayerSystem : MonoBehaviour{
 		isPlayersDirty = true;
 	}
 
+	// Everytime a player end the game.
 	// save current player information, update rank, 
-	public void OnGameOver(int distance){
-		if( curPlayer.distance < distance){
-			curPlayer.distance = distance;
+	public void OnGameOver(float distance){
+
+		if( curPlayer.distance < Mathf.FloorToInt(distance)){
+			curPlayer.distance = Mathf.FloorToInt(distance);
 			isPlayersDirty = true;
 
 			// update sort;
@@ -102,8 +96,26 @@ public class PlayerSystem : MonoBehaviour{
 
 	// when user exits game, should store players information back disk?
 	void OnDestroy(){
-		if(isPlayersDirty)
+		savePlayers();
+	}
+
+	void OnApplicationQuit(){
+//		Debug.Log("PlayerSystem: OnApplicationQuit");
+		savePlayers();
+	}
+
+	// for debug.
+	void OnApplicationPause(bool isPause){
+		if(isPause){
 			savePlayers();
+		}
+	}
+
+
+	public void OnResetPlayerSystem(){
+		players.Clear ();
+		curPlayer = null;
+		savePlayers();
 	}
 
 	public List<string> getPlayersName(){
@@ -121,6 +133,18 @@ public class PlayerSystem : MonoBehaviour{
 		return null;
 	}
 
+	void Start(){
+		
+		DontDestroyOnLoad(gameObject); 
+
+		if( ! isLoadPlayers ){
+			players.Clear();
+			loadPlayers();
+			players.Sort();
+			isLoadPlayers = true;
+		}
+	}
+
 	void initializePlayerSystemForTesting(){
 		players.Clear();
 		for(int i =0;i<4;i++){
@@ -131,27 +155,5 @@ public class PlayerSystem : MonoBehaviour{
 		}
 		players.Add( Player.newPlayer("Max",1000));
 		players.Add( Player.newPlayer("Second",500));
-	}
-
-	void initializePlayerSystem(){
-		players.Clear ();
-	}
-
-	void Awake(){
-		
-		DontDestroyOnLoad(gameObject); 
-		//savePlayer();
-		if( ! isLoadPlayers ){
-			players.Clear();
-			loadPlayers();
-
-			players.Sort();
-			
-			isLoadPlayers = true;
-			
-//			for(int i=0;i< players.Count; i++){
-//				Debug.Log( players[i].ToString() );
-//			}
-		}
 	}
 } 

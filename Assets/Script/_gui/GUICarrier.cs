@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class GUICarrier : MonoBehaviour {
 
 	public PlayerSystem playerSystem;
+	public GameObject scriptCarrier;
 
 	public GameObject startPanel;
 	public GameObject playerPanel;
@@ -122,11 +123,11 @@ public class GUICarrier : MonoBehaviour {
 
 	/* Game Panel */
 	UILabel overPanelDistanceLbl;
-	public void OnGameOver(string distance){
+	public void OnGameOver(float distance){
 		NGUITools.SetActive(overPanel,true);
 		NGUITools.SetActive(gamePanel,false);
 		background.GetComponent<UISprite>().enabled = true;
-		overPanelDistanceLbl.text = distance;
+		overPanelDistanceLbl.text = Mathf.FloorToInt(distance).ToString();
 	}
 	
 	/* Cell Panel */
@@ -200,16 +201,34 @@ public class GUICarrier : MonoBehaviour {
 
 	/* Over Panel */
 	GameObject overPanelTryAgainBtn;
-	GameObject scriptCarrier;
+	GameObject overPanelMenuBtn;
+	GameObject overPanelRankBtn;
+	GameObject overPanelExitBtn;
+	
 	void OnOverPanelTryAgainBtn(GameObject go, bool isPressed){
-		//Application.LoadLevel("scene1");
-		//scriptCarrier.SendMessage("Start");
-		//NGUITools.SetActive(gamePanel,true);
+
 		NGUITools.SetActive(overPanel,false);
 		NGUITools.SetActive(cellPanel,true);
 		OnReloadCellPanel();
 		UILight.light.enabled = true;
-		//OnCellPanelStart(overPanel,true);
+
+	}
+
+	void OnOverPanelMenuBtn(GameObject go, bool isPressed){
+		NGUITools.SetActive(startPanel, true);
+		NGUITools.SetActive(overPanel, false);
+	}
+
+	void OnOverPanelRankBtn(GameObject go, bool isPressed){
+		NGUITools.SetActive(rankPanel, true);
+		NGUITools.SetActive(overPanel, false);
+		
+		OnReloadRankPanel();
+	}
+
+	void OnOverPanelExitBtn(GameObject go, bool isPressed){
+
+		Application.Quit();
 	}
 
 	// Use this for initialization
@@ -251,7 +270,13 @@ public class GUICarrier : MonoBehaviour {
 		overPanelTryAgainBtn = overPanel.transform.FindChild("TryAgainBtn").gameObject;
 		UIEventListener.Get(overPanelTryAgainBtn).onPress = OnOverPanelTryAgainBtn;
 		overPanelDistanceLbl = overPanel.transform.FindChild("DistanceLbl").gameObject.GetComponent<UILabel>();
-	
+/*		overPanelMenuBtn = overPanel.transform.FindChild("MenuBtn").gameObject;
+		overPanelRankBtn = overPanel.transform.FindChild("RankBtn").gameObject;
+		overPanelExitBtn = overPanel.transform.FindChild("ExitBtn").gameObject;
+		UIEventListener.Get(overPanelMenuBtn).onPress=OnOverPanelMenuBtn;
+		UIEventListener.Get(overPanelRankBtn).onPress=OnOverPanelRankBtn;
+		UIEventListener.Get(overPanelExitBtn).onPress=OnOverPanelExitBtn;*/
+
 		UILight = GameObject.Find("UILight");
 
 	}

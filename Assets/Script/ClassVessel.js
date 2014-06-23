@@ -105,6 +105,16 @@ public class Vessel{
 		}
 	}
 	
+	public function AddItem(type : int, itemRad : float, cp : float, ra : float, off : Vector3){
+		var pos = CentPos2RealPos(cp);
+		var lookat = CentPos2ForwardDir(cp);
+		var up = GetUpDir(cp, -ra);
+		var rot = Quaternion.LookRotation(-lookat, up);
+		pos += Quaternion.LookRotation(lookat, up) * off;
+		var item = new BloodItem(type, itemRad, pos, rot, cp);
+		items.Add(item);
+	}
+	
 	public function AddItem(type : int, itemRad : float, cp : float, ra : float, off : float){
 		var pos = CentPos2RealPos(cp);
 		var lookat = CentPos2ForwardDir(cp);
