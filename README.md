@@ -3,7 +3,8 @@ Bloodrift
 
 Welcome to the website of Bloodrift.
 
-Bloodrift is a game created by two students from SJTU.
+Bloodrift is a game created by two students from SJTU -- Chong He, and Xueyang Hu.
+The game logic and physical engine were implemented by Chong, while the models, GUI and audio effects were done by Xueyang.
 
 It talks about the story of blood cells. They are too boring to drift in human vessels everyday. So they create two kinds of games for entertainment in their spare time.
 
